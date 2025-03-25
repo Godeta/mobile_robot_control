@@ -1,5 +1,5 @@
 # this program illustrates a simulation of the e-puck robot moving to a poing and following a trajectory
-
+# charactéristiques du robot : https://www.cyberbotics.com/doc/guide/epuck?version=cyberbotics:R2019a#overview-of-the-robot 
 import tkinter as tk
 import math
 import time
