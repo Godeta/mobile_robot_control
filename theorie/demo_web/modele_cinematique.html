@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modèle Cinématique - Robotique Mobile</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/prism.css">
+    <script src="js/prism.js"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Cours Interactif sur la Robotique Mobile</h1>
+            <h2>Modèle Cinématique du Robot Unicycle</h2>
+        </header>
+
+        <nav>
+            <ul>
+                <li><a href="index.html">Introduction</a></li>
+                <li><a href="modele_geometrique.html">Modèle géométrique</a></li>
+                <li><a href="exemple_odometrie.html">Odométrie</a></li>
+                <li><a href="modele_cinematique.html">Modèle cinématique</a></li>
+                <li><a href="modele_dynamique.html">Modèle dynamique</a></li>
+                <li><a href="algorithme_deplacement.html">Algorithme de déplacement</a></li>
+                <li><a href="implementation_pid.html">Implémentation PID</a></li>
+                <li><a href="swarm_robotics.html">Swarm Robotics</a></li>
+                <li><a href="exemple_flotte_agv.html">Exemple de flotte d'AGV</a></li>
+                <li><a href="index.html#conclusion">Conclusion</a></li>
+            </ul>
+        </nav>
+
+        <main>
+            <section>
+                <h2>4. Modèle cinématique détaillé</h2>
+                
+                <p>Le modèle cinématique d'un robot mobile décrit la relation entre les vitesses de ses actionneurs et le mouvement résultant du robot dans l'espace. Cette section approfondit le modèle cinématique du robot unicycle à deux roues différentielles.</p>
+                
+                <h3>4.1 Modèle cinématique direct</h3>
+                
+                <p>Le modèle cinématique direct permet de calculer les vitesses du robot dans le repère global à partir des vitesses des roues. Pour un robot unicycle, ce modèle est donné par les équations suivantes :</p>
+                
+                <div class="equation">
+                    \begin{align}
+                    \dot{x} &= \frac{r}{2}(v_r+v_l) \cos(\theta) \\
+                    \dot{y} &= \frac{r}{2}(v_r+v_l) \sin(\theta) \\
+                    \dot{\theta} &= \frac{r}{l} (v_r-v_l)
+                    \end{align}
+                </div>
+                
+                <p>où :</p>
+                <ul>
+                    <li>\(\dot{x}\) et \(\dot{y}\) sont les composantes de la vitesse linéaire du robot dans le repère global</li>
+                    <li>\(\dot{\theta}\) est la vitesse angulaire du robot</li>
+                    <li>\(v_r\) et \(v_l\) sont les vitesses angulaires des roues droite et gauche</li>
+                    <li>\(r\) est le rayon des roues</li>
+                    <li>\(l\) est la demi-distance entre les roues</li>
+                </ul>
+                
+                <p>Ces équations peuvent être réécrites sous forme matricielle :</p>
+                
+                <div class="equation">
+                    \begin{align}
+                    \begin{bmatrix} \dot{x} \\ \dot{y} \\ \dot{\theta} \end{bmatrix} = 
+                    \begin{bmatrix} 
+                    \frac{r}{2}\cos(\theta) & \frac{r}{2}\cos(\theta) \\
+                    \frac{r}{2}\sin(\theta) & \frac{r}{2}\sin(\theta) \\
+                    \frac{r}{l} & -\frac{r}{l}
+                    \end{bmatrix}
+                    \begin{bmatrix} v_r \\ v_l \end{bmatrix}
+                    \end{align}
+                </div>
+                
+                <h3>4.2 Modèle cinématique inverse</h3>
+                
+                <p>Le modèle cinématique inverse permet de calculer les vitesses des roues nécessaires pour obtenir une vitesse donnée du robot. Pour un robot unicycle, ce modèle est donné par :</p>
+                
+                <div class="equation">
+                    \begin{align}
+                    \begin{bmatrix} v_r \\ v_l \end{bmatrix} = 
+                    \begin{bmatrix} 
+                    \frac{1}{r} & 0 & \frac{l}{r} \\
+                    \frac{1}{r} & 0 & -\frac{l}{r}
+                    \end{bmatrix}
+                    \begin{bmatrix} v \\ 0 \\ \omega \end{bmatrix}
+                    \end{align}
+                </div>
+                
+                <p>où :</p>
+                <ul>
+                    <li>\(v\) est la vitesse linéaire du robot dans la direction de son orientation</li>
+                    <li>\(\omega\) est la vitesse angulaire du robot</li>
+                </ul>
+                
+                <p>Ce qui donne :</p>
+                
+                <div class="equation">
+                    \begin{align}
+                    v_r &= \frac{v + l\omega}{r} \\
+                    v_l &= \frac{v - l\omega}{r}
+                    \end{align}
+                </div>
+                
+                <h3>4.3 Jacobienne du robot</h3>
+                
+                <p>La jacobienne du robot est la matrice qui relie les vitesses des actionneurs aux vitesses du robot dans le repère global. Pour un robot unicycle, cette matrice est :</p>
+                
+                <div class="equation">
+                    \begin{align}
+                    J(\theta) = 
+                    \begin{bmatrix} 
+                    \frac{r}{2}\cos(\theta) & \frac{r}{2}\cos(\theta) \\
+                    \frac{r}{2}\sin(\theta) & \frac{r}{2}\sin(\theta) \\
+                    \frac{r}{l} & -\frac{r}{l}
+                    \end{bmatrix}
+                    \end{align}
+                </div>
+                
+                <p>Cette matrice est importante pour l'analyse de la cinématique du robot, notamment pour déterminer les singularités et les capacités de mouvement du robot.</p>
+                
+                <h3>4.4 Contraintes non-holonomes</h3>
+                
+                <p>Le robot unicycle est soumis à des contraintes non-holonomes qui limitent ses mouvements instantanés. La principale contrainte est que le robot ne peut pas se déplacer latéralement (perpendiculairement à son axe).</p>
+                
+                <p>Cette contrainte peut être exprimée par :</p>
+                
+                <div class="equation">
+                    \begin{align}
+                    \dot{x}\sin(\theta) - \dot{y}\cos(\theta) = 0
+                    \end{align}
+                </div>
+                
+                <p>Cette équation signifie que la composante de la vitesse perpendiculaire à l'axe du robot est nulle, ce qui correspond à la condition de roulement sans glissement.</p>
+                
+                <h3>4.5 Cas particuliers de mouvement</h3>
+                
+                <h4>4.5.1 Ligne droite</h4>
+                
+                <p>Si les deux roues tournent à la même vitesse (\(v_r = v_l = v_w\)), alors :</p>
+                <ul>
+                    <li>\(\dot{x} = r \cdot v_w \cdot \cos(\theta)\)</li>
+                    <li>\(\dot{y} = r \cdot v_w \cdot \sin(\theta)\)</li>
+                    <li>\(\dot{\theta} = 0\)</li>
+                </ul>
+                
+                <p>Le robot se déplace en ligne droite dans la direction de son orientation.</p>
+                
+                <h4>4.5.2 Rotation sur place</h4>
+                
+                <p>Si les roues tournent à des vitesses égales mais opposées (\(v_r = -v_l = v_w\)), alors :</p>
+                <ul>
+                    <li>\(\dot{x} = 0\)</li>
+                    <li>\(\dot{y} = 0\)</li>
+                    <li>\(\dot{\theta} = \frac{2r}{l} \cdot v_w\)</li>
+                </ul>
+                
+                <p>Le robot tourne sur place autour de son centre.</p>
+                
+                <h4>4.5.3 Arc de cercle</h4>
+                
+                <p>Si les roues tournent à des vitesses différentes (\(v_r \neq v_l\)), alors le robot décrit un arc de cercle autour d'un point appelé Centre Instantané de Rotation (CIR).</p>
+                
+                <p>Le rayon de cet arc est donné par :</p>
+                
+                <div class="equation">
+                    \begin{align}
+                    R = \frac{l(v_r + v_l)}{v_r - v_l}
+                    \end{align}
+                </div>
+                
+                <h3>4.6 Modèle en coordonnées polaires</h3>
+                
+                <p>Pour certaines applications, il est utile d'exprimer le modèle cinématique en coordonnées polaires, notamment pour le suivi de trajectoire ou la navigation vers un point cible.</p>
+                
+                <p>Si on considère un point cible \((x_g, y_g)\) et que l'on définit :</p>
+                <ul>
+                    <li>\(\rho\) : distance entre le robot et le point cible</li>
+                    <li>\(\alpha\) : angle entre l'axe du robot et la ligne reliant le robot au point cible</li>
+                    <li>\(\beta\) : angle entre la ligne reliant le robot au point cible et l'axe des x du repère global</li>
+                </ul>
+                
+                <p>Alors le modèle cinématique en coordonnées polaires est :</p>
+                
+                <div class="equation">
+                    \begin{align}
+                    \dot{\rho} &= -v\cos(\alpha) \\
+                    \dot{\alpha} &= -\omega + v\frac{\sin(\alpha)}{\rho} \\
+                    \dot{\beta} &= v\frac{\sin(\alpha)}{\rho}
+                    \end{align}
+                </div>
+                
+                <p>où \(v\) est la vitesse linéaire du robot et \(\omega\) est sa vitesse angulaire.</p>
+                
+                <h3>4.7 Discrétisation du modèle</h3>
+                
+                <p>Pour l'implémentation numérique, il est souvent nécessaire de discrétiser le modèle cinématique. Une approche simple est d'utiliser la méthode d'Euler :</p>
+                
+                <div class="equation">
+                    \begin{align}
+                    x(t+\Delta t) &= x(t) + \dot{x}(t) \cdot \Delta t \\
+                    y(t+\Delta t) &= y(t) + \dot{y}(t) \cdot \Delta t \\
+                    \theta(t+\Delta t) &= \theta(t) + \dot{\theta}(t) \cdot \Delta t
+                    \end{align}
+                </div>
+                
+                <p>où \(\Delta t\) est le pas de temps.</p>
+                
+                <p>Pour une meilleure précision, on peut utiliser des méthodes d'intégration d'ordre supérieur comme Runge-Kutta.</p>
+                
+                <h3>4.8 Implémentation en Python</h3>
+                
+                <p>Voici une implémentation du modèle cinématique en Python, avec simulation et visualisation :</p>
+                
+                <pre><code class="language-python">import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.patches import Circle, Arrow
+from matplotlib.animation import FuncAnimation
+import math
+
+class RobotUnicycle:
+    def __init__(self, x=0, y=0, theta=0, wheel_radius=0.1, axle_length=0.5):
+        # État du robot
+        self.x = x
+        self.y = y
+        self.theta = theta
+        
+        # Paramètres du robot
+        self.r = wheel_radius  # rayon des roues
+        self.l = axle_length / 2  # demi-distance entre les roues
+        
+        # Historique des positions pour la visualisation
+        self.history_x = [self.x]
+        self.history_y = [self.y]
+    
+    def update_kinematics(self, v_r, v_l, dt):
+        """
+        Met à jour l'état du robot en utilisant le modèle cinématique.
+        
+        Args:
+            v_r (float): Vitesse angulaire de la roue droite (rad/s)
+            v_l (float): Vitesse angulaire de la roue gauche (rad/s)
+            dt (float): Pas de temps (s)
+        """
+        # Calcul des vitesses linéaire et angulaire
+        v = self.r * (v_r + v_l) / 2
+        omega = self.r * (v_r - v_l) / (2 * self.l)
+        
+        # Mise à jour de l'état
+        self.x += v * math.cos(self.theta) * dt
+        self.y += v * math.sin(self.theta) * dt
+        self.theta += omega * dt
+        
+        # Normalisation de l'angle
+        self.theta = math.atan2(math.sin(self.theta), math.cos(self.theta))
+        
+        # Enregistrement de la position pour la visualisation
+        self.history_x.append(self.x)
+        self.history_y.append(self.y)
+    
+    def inverse_kinematics(self, v, omega):
+        """
+        Calcule les vitesses des roues à partir des vitesses linéaire et angulaire.
+        
+        Args:
+            v (float): Vitesse linéaire désirée (m/s)
+            omega (float): Vitesse angulaire désirée (rad/s)
+        
+        Returns:
+            tuple: Vitesses des roues droite et gauche (v_r, v_l)
+        """
+        v_r = (v + self.l * omega) / self.r
+        v_l = (v - self.l * omega) / self.r
+        
+        return v_r, v_l
+    
+    def plot(self, ax):
+        """
+        Affiche le robot sur l'axe donné.
+        
+        Args:
+            ax: Axe matplotlib
+        """
+        # Trajectoire
+        ax.plot(self.history_x, self.history_y, 'b-', alpha=0.7)
+        
+        # Corps du robot
+        robot_circle = Circle((self.x, self.y), 0.2, fill=False, color='blue')
+        ax.add_patch(robot_circle)
+        
+        # Direction
+        direction_x = self.x + 0.3 * math.cos(self.theta)
+        direction_y = self.y + 0.3 * math.sin(self.theta)
+        ax.plot([self.x, direction_x], [self.y, direction_y], 'b-')
+        
+        # Roues
+        left_wheel_x = self.x - self.l * math.sin(self.theta)
+        left_wheel_y = self.y + self.l * math.cos(self.theta)
+        right_wheel_x = self.x + self.l * math.sin(self.theta)
+        right_wheel_y = self.y - self.l * math.cos(self.theta)
+        
+        ax.plot(left_wheel_x, left_wheel_y, 'ro', markersize=5)
+        ax.plot(right_wheel_x, right_wheel_y, 'ro', markersize=5)
+
+# Exemple d'utilisation
+if __name__ == "__main__":
+    # Créer un robot
+    robot = RobotUnicycle(x=0, y=0, theta=0, wheel_radius=0.1, axle_length=0.5)
+    
+    # Paramètres de simulation
+    dt = 0.1  # pas de temps
+    T = 10.0  # temps total de simulation
+    t = np.arange(0, T, dt)
+    
+    # Définir une séquence de mouvements
+    movements = [
+        # (v, omega, description)
+        (1.0, 0.0, "Ligne droite"),
+        (0.0, 1.0, "Rotation sur place"),
+        (1.0, 0.5, "Arc de cercle"),
+        (0.5, -0.5, "Arc de cercle dans l'autre sens")
+    ]
+    
+    # Créer une figure
+    fig, ax = plt.subplots(figsize=(10, 10))
+    
+    # Fonction d'animation
+    def animate(i):
+        # Déterminer le mouvement actuel
+        movement_index = min(i // 25, len(movements) - 1)
+        v, omega, _ = movements[movement_index]
+        
+        # Calculer les vitesses des roues
+        v_r, v_l = robot.inverse_kinematics(v, omega)
+        
+        # Mettre à jour l'état du robot
+        robot.update_kinematics(v_r, v_l, dt)
+        
+        # Effacer l'axe
+        ax.clear()
+        
+        # Afficher le robot
+        robot.plot(ax)
+        
+        # Configurer les axes
+        ax.set_xlim(-5, 5)
+        ax.set_ylim(-5, 5)
+        ax.set_aspect('equal')
+        ax.grid(True)
+        ax.set_xlabel('X (m)')
+        ax.set_ylabel('Y (m)')
+        
+        # Afficher les informations sur le mouvement
+        _, _, desc = movements[movement_index]
+        ax.set_title(f'Modèle cinématique du robot unicycle - {desc}')
+        
+        # Afficher les vitesses
+        ax.text(-4.5, 4.5, f'v = {v:.1f} m/s, ω = {omega:.1f} rad/s', fontsize=10,
+                bbox=dict(facecolor='white', alpha=0.7))
+        ax.text(-4.5, 4.0, f'v_r = {v_r:.1f} rad/s, v_l = {v_l:.1f} rad/s', fontsize=10,
+                bbox=dict(facecolor='white', alpha=0.7))
+    
+    # Créer l'animation
+    ani = FuncAnimation(fig, animate, frames=100, interval=50, blit=False)
+    
+    plt.show()
+</code></pre>
+                
+                <p>Cette implémentation pe
+(Content truncated due to size limit. Use line ranges to read in chunks)

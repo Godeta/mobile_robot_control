@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Implémentation PID - Robotique Mobile</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/prism.css">
+    <script src="js/prism.js"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Cours Interactif sur la Robotique Mobile</h1>
+            <h2>Implémentation d'un Contrôleur PID</h2>
+        </header>
+
+        <nav>
+            <ul>
+                <li><a href="index.html">Introduction</a></li>
+                <li><a href="modele_geometrique.html">Modèle géométrique</a></li>
+                <li><a href="exemple_odometrie.html">Odométrie</a></li>
+                <li><a href="modele_cinematique.html">Modèle cinématique</a></li>
+                <li><a href="modele_dynamique.html">Modèle dynamique</a></li>
+                <li><a href="algorithme_deplacement.html">Algorithme de déplacement</a></li>
+                <li><a href="implementation_pid.html">Implémentation PID</a></li>
+                <li><a href="swarm_robotics.html">Swarm Robotics</a></li>
+                <li><a href="exemple_flotte_agv.html">Exemple de flotte d'AGV</a></li>
+                <li><a href="index.html#conclusion">Conclusion</a></li>
+            </ul>
+        </nav>
+
+        <main>
+            <section>
+                <h2>7. Implémentation d'un contrôleur PID</h2>
+                
+                <p>Le contrôleur PID (Proportionnel-Intégral-Dérivé) est l'un des algorithmes de contrôle les plus utilisés en robotique mobile. Cette section présente les principes du contrôle PID et son implémentation pour un robot unicycle.</p>
+                
+                <h3>7.1 Principes du contrôle PID</h3>
+                
+                <p>Un contrôleur PID calcule une commande de contrôle basée sur trois termes :</p>
+                <ul>
+                    <li><strong>Proportionnel (P)</strong> : réagit proportionnellement à l'erreur actuelle</li>
+                    <li><strong>Intégral (I)</strong> : accumule les erreurs passées pour éliminer les erreurs statiques</li>
+                    <li><strong>Dérivé (D)</strong> : anticipe les erreurs futures en se basant sur le taux de variation de l'erreur</li>
+                </ul>
+                
+                <p>La sortie d'un contrôleur PID est donnée par :</p>
+                
+                <div class="equation">
+                    \begin{align}
+                    u(t) = K_p e(t) + K_i \int_0^t e(\tau) d\tau + K_d \frac{de(t)}{dt}
+                    \end{align}
+                </div>
+                
+                <p>où :</p>
+                <ul>
+                    <li>\(u(t)\) est la commande de contrôle</li>
+                    <li>\(e(t)\) est l'erreur (différence entre la consigne et la mesure)</li>
+                    <li>\(K_p\), \(K_i\), et \(K_d\) sont les gains proportionnel, intégral, et dérivé</li>
+                </ul>
+                
+                <h3>7.2 Discrétisation du contrôleur PID</h3>
+                
+                <p>Pour l'implémentation numérique, le contrôleur PID doit être discrétisé. Une forme discrète courante est :</p>
+                
+                <div class="equation">
+                    \begin{align}
+                    u(k) = K_p e(k) + K_i \sum_{j=0}^{k} e(j) \Delta t + K_d \frac{e(k) - e(k-1)}{\Delta t}
+                    \end{align}
+                </div>
+                
+                <p>où \(\Delta t\) est le pas de temps et \(k\) est l'indice de l'échantillon actuel.</p>
+                
+                <h3>7.3 Réglage des gains PID</h3>
+                
+                <p>Le réglage des gains \(K_p\), \(K_i\), et \(K_d\) est crucial pour obtenir de bonnes performances. Plusieurs méthodes existent :</p>
+                
+                <h4>7.3.1 Méthode de Ziegler-Nichols</h4>
+                
+                <p>La méthode de Ziegler-Nichols est une approche empirique qui consiste à :</p>
+                <ol>
+                    <li>Augmenter \(K_p\) jusqu'à ce que le système oscille de manière stable (gain critique \(K_c\))</li>
+                    <li>Mesurer la période des oscillations \(T_c\)</li>
+                    <li>Calculer les gains selon des formules prédéfinies :
+                        <ul>
+                            <li>\(K_p = 0.6 K_c\)</li>
+                            <li>\(K_i = 2K_p / T_c\)</li>
+                            <li>\(K_d = K_p T_c / 8\)</li>
+                        </ul>
+                    </li>
+                </ol>
+                
+                <h4>7.3.2 Réglage manuel</h4>
+                
+                <p>Le réglage manuel est souvent utilisé en pratique :</p>
+                <ol>
+                    <li>Commencer avec tous les gains à zéro</li>
+                    <li>Augmenter \(K_p\) jusqu'à obtenir une réponse rapide mais sans trop d'oscillations</li>
+                    <li>Augmenter \(K_i\) pour éliminer l'erreur statique</li>
+                    <li>Augmenter \(K_d\) pour réduire les dépassements et améliorer la stabilité</li>
+                </ol>
+                
+                <h3>7.4 Améliorations du contrôleur PID</h3>
+                
+                <p>Plusieurs améliorations peuvent être apportées au contrôleur PID de base :</p>
+                
+                <h4>7.4.1 Anti-windup</h4>
+                
+                <p>Le phénomène de "windup" se produit lorsque l'intégrateur continue à accumuler l'erreur alors que l'actionneur est saturé. Pour éviter ce problème, on peut utiliser des techniques d'anti-windup, comme la limitation de l'intégrale ou le "back-calculation".</p>
+                
+                <h4>7.4.2 Filtrage du terme dérivé</h4>
+                
+                <p>Le terme dérivé est sensible au bruit de mesure. Pour réduire cette sensibilité, on peut filtrer le terme dérivé :</p>
+                
+                <div class="equation">
+                    \begin{align}
+                    u_d(k) = \alpha u_d(k-1) + (1-\alpha) K_d \frac{e(k) - e(k-1)}{\Delta t}
+                    \end{align}
+                </div>
+                
+                <p>où \(\alpha\) est un coefficient de filtrage entre 0 et 1.</p>
+                
+                <h4>7.4.3 Forme parallèle vs. forme standard</h4>
+                
+                <p>Le contrôleur PID peut être implémenté sous différentes formes :</p>
+                <ul>
+                    <li><strong>Forme parallèle</strong> : \(u(t) = K_p e(t) + K_i \int e(t) dt + K_d \frac{de(t)}{dt}\)</li>
+                    <li><strong>Forme standard</strong> : \(u(t) = K_p \left(e(t) + \frac{1}{T_i} \int e(t) dt + T_d \frac{de(t)}{dt}\right)\)</li>
+                </ul>
+                
+                <p>où \(T_i\) est le temps intégral et \(T_d\) est le temps dérivé.</p>
+                
+                <h3>7.5 Applications du contrôle PID en robotique mobile</h3>
+                
+                <p>Le contrôle PID a de nombreuses applications en robotique mobile :</p>
+                
+                <h4>7.5.1 Régulation de vitesse</h4>
+                
+                <p>Un contrôleur PID peut être utilisé pour réguler la vitesse des roues du robot :</p>
+                <ul>
+                    <li>Consigne : vitesse désirée de la roue</li>
+                    <li>Mesure : vitesse actuelle de la roue (mesurée par encodeurs)</li>
+                    <li>Commande : tension ou courant appliqué au moteur</li>
+                </ul>
+                
+                <h4>7.5.2 Suivi de trajectoire</h4>
+                
+                <p>Un contrôleur PID peut être utilisé pour le suivi de trajectoire :</p>
+                <ul>
+                    <li>Consigne : position désirée sur la trajectoire</li>
+                    <li>Mesure : position actuelle du robot</li>
+                    <li>Commande : vitesses des roues</li>
+                </ul>
+                
+                <h4>7.5.3 Régulation d'orientation</h4>
+                
+                <p>Un contrôleur PID peut être utilisé pour maintenir une orientation spécifique :</p>
+                <ul>
+                    <li>Consigne : orientation désirée</li>
+                    <li>Mesure : orientation actuelle du robot</li>
+                    <li>Commande : différence de vitesse entre les roues</li>
+                </ul>
+                
+                <h3>7.6 Implémentation en Python</h3>
+                
+                <p>Voici une implémentation d'un contrôleur PID en Python :</p>
+                
+                <pre><code class="language-python">class PIDController:
+    def __init__(self, Kp, Ki, Kd, dt, min_output=float('-inf'), max_output=float('inf')):
+        """
+        Initialise un contrôleur PID.
+        
+        Args:
+            Kp (float): Gain proportionnel
+            Ki (float): Gain intégral
+            Kd (float): Gain dérivé
+            dt (float): Pas de temps
+            min_output (float): Sortie minimale (pour anti-windup)
+            max_output (float): Sortie maximale (pour anti-windup)
+        """
+        self.Kp = Kp
+        self.Ki = Ki
+        self.Kd = Kd
+        self.dt = dt
+        
+        self.min_output = min_output
+        self.max_output = max_output
+        
+        self.previous_error = 0
+        self.integral = 0
+        
+        # Pour le filtrage du terme dérivé
+        self.alpha = 0.1  # coefficient de filtrage
+        self.previous_derivative = 0
+    
+    def compute(self, setpoint, measurement):
+        """
+        Calcule la commande de contrôle.
+        
+        Args:
+            setpoint (float): Consigne
+            measurement (float): Mesure
+        
+        Returns:
+            float: Commande de contrôle
+        """
+        # Calcul de l'erreur
+        error = setpoint - measurement
+        
+        # Terme proportionnel
+        p_term = self.Kp * error
+        
+        # Terme intégral avec anti-windup
+        self.integral += error * self.dt
+        i_term = self.Ki * self.integral
+        
+        # Terme dérivé avec filtrage
+        derivative = (error - self.previous_error) / self.dt
+        filtered_derivative = self.alpha * self.previous_derivative + (1 - self.alpha) * derivative
+        d_term = self.Kd * filtered_derivative
+        
+        # Calcul de la commande
+        output = p_term + i_term + d_term
+        
+        # Saturation de la commande
+        output = max(self.min_output, min(self.max_output, output))
+        
+        # Anti-windup : ajustement de l'intégrale si la commande est saturée
+        if output == self.min_output or output == self.max_output:
+            # Calculer la commande sans saturation
+            unsaturated_output = p_term + i_term + d_term
+            
+            # Ajuster l'intégrale pour que la commande soit à la limite de saturation
+            if unsaturated_output > self.max_output:
+                self.integral -= (unsaturated_output - self.max_output) / self.Ki
+            elif unsaturated_output < self.min_output:
+                self.integral -= (unsaturated_output - self.min_output) / self.Ki
+        
+        # Mise à jour des variables pour la prochaine itération
+        self.previous_error = error
+        self.previous_derivative = filtered_derivative
+        
+        return output
+    
+    def reset(self):
+        """
+        Réinitialise le contrôleur.
+        """
+        self.previous_error = 0
+        self.integral = 0
+        self.previous_derivative = 0
+</code></pre>
+                
+                <h3>7.7 Exemple : régulation de vitesse d'un robot unicycle</h3>
+                
+                <p>Voici un exemple d'utilisation du contrôleur PID pour réguler la vitesse d'un robot unicycle :</p>
+                
+                <pre><code class="language-python">import numpy as np
+import matplotlib.pyplot as plt
+import math
+
+class RobotUnicycle:
+    def __init__(self, x=0, y=0, theta=0, wheel_radius=0.1, axle_length=0.5):
+        # État du robot
+        self.x = x
+        self.y = y
+        self.theta = theta
+        self.v_r = 0  # vitesse de la roue droite
+        self.v_l = 0  # vitesse de la roue gauche
+        
+        # Paramètres du robot
+        self.r = wheel_radius  # rayon des roues
+        self.l = axle_length / 2  # demi-distance entre les roues
+        
+        # Historique pour la visualisation
+        self.history_x = [self.x]
+        self.history_y = [self.y]
+        self.history_v_r = [self.v_r]
+        self.history_v_l = [self.v_l]
+        self.history_time = [0]
+    
+    def update_dynamics(self, u_r, u_l, dt):
+        """
+        Met à jour l'état du robot en utilisant un modèle dynamique simplifié.
+        
+        Args:
+            u_r (float): Commande pour la roue droite
+            u_l (float): Commande pour la roue gauche
+            dt (float): Pas de temps
+        """
+        # Modèle dynamique simplifié des moteurs
+        tau_r = 0.5  # constante de temps du moteur droit
+        tau_l = 0.5  # constante de temps du moteur gauche
+        
+        # Mise à jour des vitesses des roues (premier ordre)
+        self.v_r += (u_r - self.v_r) * dt / tau_r
+        self.v_l += (u_l - self.v_l) * dt / tau_l
+        
+        # Calcul des vitesses linéaire et angulaire
+        v = self.r * (self.v_r + self.v_l) / 2
+        omega = self.r * (self.v_r - self.v_l) / (2 * self.l)
+        
+        # Mise à jour de la position et de l'orientation
+        self.x += v * math.cos(self.theta) * dt
+        self.y += v * math.sin(self.theta) * dt
+        self.theta += omega * dt
+        
+        # Normalisation de l'angle
+        self.theta = math.atan2(math.sin(self.theta), math.cos(self.theta))
+        
+        # Enregistrement pour la visualisation
+        self.history_x.append(self.x)
+        self.history_y.append(self.y)
+        self.history_v_r.append(self.v_r)
+        self.history_v_l.append(self.v_l)
+        self.history_time.append(self.history_time[-1] + dt)
+
+# Exemple d'utilisation
+if __name__ == "__main__":
+    # Créer un robot
+    robot = RobotUnicycle()
+    
+    # Créer des contrôleurs PID pour les roues droite et gauche
+    pid_r = PIDController(Kp=1.0, Ki=0.5, Kd=0.1, dt=0.01, min_output=0, max_output=10)
+    pid_l = PIDController(Kp=1.0, Ki=0.5, Kd=0.1, dt=0.01, min_output=0, max_output=10)
+    
+    # Paramètres de simulation
+    dt = 0.01  # pas de temps
+    T = 5.0  # temps total de simulation
+    t = np.arange(0, T, dt)
+    
+    # Consignes de vitesse
+    setpoint_r = np.zeros_like(t)
+    setpoint_l = np.zeros_like(t)
+    
+    # Échelon à t=1s
+    setpoint_r[t >= 1.0] = 5.0
+    setpoint_l[t >= 1.0] = 5.0
+    
+    # Échelon différent à t=3s
+    setpoint_r[t >= 3.0] = 7.0
+    setpoint_l[t >= 3.0] = 3.0
+    
+    # Simuler le mouvement
+    for i, time in enumerate(t):
+        # Calculer les commandes de contrôle
+        u_r = pid_r.compute(setpoint_r[i], robot.v_r)
+        u_l = pid_l.compute(setpoint_l[i], robot.v_l)
+        
+        # Mettre à jour l'état du robot
+        robot.update_dynamics(u_r, u_l, dt)
+    
+    # Créer une figure pour la trajectoire
+    fig1, ax1 = plt.subplots(figsize=(8, 8))
+    
+    # Afficher la trajectoire
+    ax1.plot(robot.history_x, robot.history_y, 'b-')
+    ax1.plot(robot.history_x[0], robot.history_y[0], 'go', markersize=10)
+    ax1.plot(robot.history_x[-1], robot.history_y[-1], 'ro', markersize=10)
+    
+    # Configurer les axes
+    ax1.set_xlim(-1, 5)
+    ax1.set_ylim(-3, 3)
+    ax1.set_aspect('equal')
+    ax1.grid(True)
+    ax1.set_xlabel('X (m)')
+    ax1.set_ylabel('Y (m)')
+    ax1.set_title('Trajectoire du robot')
+    
+    # Créer une figure pour les vitesses
+    fig2, (ax2, ax3) = plt.subplots(2, 1, figsize=(10, 8))
+    
+    # Afficher les vitesses de la roue droite
+    ax2.plot(robot.history_time, robot.history_v_r, 'b-', label='Vite
+(Content truncated due to size limit. Use line ranges to read in chunks)

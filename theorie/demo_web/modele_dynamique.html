@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modèle Dynamique - Robotique Mobile</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/prism.css">
+    <script src="js/prism.js"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Cours Interactif sur la Robotique Mobile</h1>
+            <h2>Modèle Dynamique du Robot Unicycle</h2>
+        </header>
+
+        <nav>
+            <ul>
+                <li><a href="index.html">Introduction</a></li>
+                <li><a href="modele_geometrique.html">Modèle géométrique</a></li>
+                <li><a href="exemple_odometrie.html">Odométrie</a></li>
+                <li><a href="modele_cinematique.html">Modèle cinématique</a></li>
+                <li><a href="modele_dynamique.html">Modèle dynamique</a></li>
+                <li><a href="algorithme_deplacement.html">Algorithme de déplacement</a></li>
+                <li><a href="implementation_pid.html">Implémentation PID</a></li>
+                <li><a href="swarm_robotics.html">Swarm Robotics</a></li>
+                <li><a href="exemple_flotte_agv.html">Exemple de flotte d'AGV</a></li>
+                <li><a href="index.html#conclusion">Conclusion</a></li>
+            </ul>
+        </nav>
+
+        <main>
+            <section>
+                <h2>5. Modèle dynamique</h2>
+                
+                <p>Le modèle dynamique d'un robot mobile décrit la relation entre les forces et les couples appliqués au robot et le mouvement résultant. Contrairement au modèle cinématique, il prend en compte les propriétés inertielles du robot, les forces de frottement, et les couples moteurs.</p>
+                
+                <h3>5.1 Propriétés inertielles du robot</h3>
+                
+                <p>Les principales propriétés inertielles d'un robot unicycle sont :</p>
+                <ul>
+                    <li>\(m\) : masse totale du robot</li>
+                    <li>\(I\) : moment d'inertie du robot autour de son axe vertical</li>
+                    <li>\(I_w\) : moment d'inertie d'une roue autour de son axe de rotation</li>
+                </ul>
+                
+                <p>Ces propriétés déterminent comment le robot réagit aux forces et aux couples qui lui sont appliqués.</p>
+                
+                <h3>5.2 Forces et couples agissant sur le robot</h3>
+                
+                <p>Plusieurs forces et couples agissent sur un robot unicycle :</p>
+                
+                <h4>5.2.1 Forces motrices</h4>
+                
+                <p>Les forces motrices sont générées par les moteurs qui entraînent les roues. Pour chaque roue, la force motrice est donnée par :</p>
+                
+                <div class="equation">
+                    \begin{align}
+                    F_r &= \frac{\tau_r}{r} \\
+                    F_l &= \frac{\tau_l}{r}
+                    \end{align}
+                </div>
+                
+                <p>où \(\tau_r\) et \(\tau_l\) sont les couples moteurs appliqués aux roues droite et gauche, et \(r\) est le rayon des roues.</p>
+                
+                <h4>5.2.2 Forces de frottement</h4>
+                
+                <p>Les forces de frottement s'opposent au mouvement du robot. On distingue généralement :</p>
+                <ul>
+                    <li>Le frottement visqueux, proportionnel à la vitesse : \(F_v = -b \cdot v\)</li>
+                    <li>Le frottement de Coulomb, de magnitude constante : \(F_c = -c \cdot \text{sign}(v)\)</li>
+                </ul>
+                
+                <p>où \(b\) et \(c\) sont des coefficients de frottement, et \(v\) est la vitesse.</p>
+                
+                <h4>5.2.3 Couples de frottement</h4>
+                
+                <p>De même, des couples de frottement s'opposent à la rotation du robot :</p>
+                <ul>
+                    <li>Le frottement visqueux en rotation : \(\tau_v = -b_\theta \cdot \omega\)</li>
+                    <li>Le frottement de Coulomb en rotation : \(\tau_c = -c_\theta \cdot \text{sign}(\omega)\)</li>
+                </ul>
+                
+                <p>où \(b_\theta\) et \(c_\theta\) sont des coefficients de frottement en rotation, et \(\omega\) est la vitesse angulaire.</p>
+                
+                <h3>5.3 Équations du mouvement</h3>
+                
+                <p>Les équations du mouvement d'un robot unicycle peuvent être dérivées en utilisant le formalisme de Lagrange ou les lois de Newton.</p>
+                
+                <h4>5.3.1 Approche de Lagrange</h4>
+                
+                <p>Le lagrangien du système est donné par :</p>
+                
+                <div class="equation">
+                    \begin{align}
+                    L = T - V
+                    \end{align}
+                </div>
+                
+                <p>où \(T\) est l'énergie cinétique et \(V\) est l'énergie potentielle.</p>
+                
+                <p>L'énergie cinétique du robot est la somme de l'énergie cinétique de translation, de rotation, et de rotation des roues :</p>
+                
+                <div class="equation">
+                    \begin{align}
+                    T = \frac{1}{2}m(v_x^2 + v_y^2) + \frac{1}{2}I\omega^2 + \frac{1}{2}I_w(\omega_r^2 + \omega_l^2)
+                    \end{align}
+                </div>
+                
+                <p>où \(v_x\) et \(v_y\) sont les composantes de la vitesse du robot, \(\omega\) est sa vitesse angulaire, et \(\omega_r\) et \(\omega_l\) sont les vitesses angulaires des roues.</p>
+                
+                <p>Les équations du mouvement sont obtenues en appliquant les équations de Lagrange :</p>
+                
+                <div class="equation">
+                    \begin{align}
+                    \frac{d}{dt}\left(\frac{\partial L}{\partial \dot{q}_i}\right) - \frac{\partial L}{\partial q_i} = Q_i
+                    \end{align}
+                </div>
+                
+                <p>où \(q_i\) sont les coordonnées généralisées et \(Q_i\) sont les forces généralisées.</p>
+                
+                <h4>5.3.2 Équations finales</h4>
+                
+                <p>Après calculs, on obtient les équations du mouvement suivantes :</p>
+                
+                <div class="equation">
+                    \begin{align}
+                    m\ddot{x} &= F_x \\
+                    m\ddot{y} &= F_y \\
+                    I\ddot{\theta} &= \tau
+                    \end{align}
+                </div>
+                
+                <p>où \(F_x\) et \(F_y\) sont les composantes de la force résultante dans le repère global, et \(\tau\) est le couple résultant.</p>
+                
+                <p>En tenant compte des contraintes non-holonomes et en exprimant les forces et couples en fonction des couples moteurs, on obtient :</p>
+                
+                <div class="equation">
+                    \begin{align}
+                    (m + 2\frac{I_w}{r^2})\dot{v} &= \frac{\tau_r + \tau_l}{r} - b_v v - c_v \text{sign}(v) \\
+                    (I + 2\frac{I_w l^2}{r^2})\dot{\omega} &= \frac{l(\tau_r - \tau_l)}{r} - b_\omega \omega - c_\omega \text{sign}(\omega)
+                    \end{align}
+                </div>
+                
+                <p>où \(v\) est la vitesse linéaire du robot, \(\omega\) est sa vitesse angulaire, \(b_v\), \(c_v\), \(b_\omega\), et \(c_\omega\) sont des coefficients de frottement.</p>
+                
+                <h3>5.4 Modèle dynamique complet</h3>
+                
+                <p>Le modèle dynamique complet du robot unicycle peut être écrit sous forme matricielle :</p>
+                
+                <div class="equation">
+                    \begin{align}
+                    M(q)\ddot{q} + C(q, \dot{q})\dot{q} + G(q) + F(\dot{q}) = B(q)\tau
+                    \end{align}
+                </div>
+                
+                <p>où :</p>
+                <ul>
+                    <li>\(q = [x, y, \theta]^T\) est le vecteur d'état</li>
+                    <li>\(M(q)\) est la matrice d'inertie</li>
+                    <li>\(C(q, \dot{q})\) est la matrice des termes centrifuges et de Coriolis</li>
+                    <li>\(G(q)\) est le vecteur des termes gravitationnels</li>
+                    <li>\(F(\dot{q})\) est le vecteur des forces de frottement</li>
+                    <li>\(B(q)\) est la matrice de couplage des entrées</li>
+                    <li>\(\tau = [\tau_r, \tau_l]^T\) est le vecteur des couples moteurs</li>
+                </ul>
+                
+                <h3>5.5 Modèle dynamique réduit</h3>
+                
+                <p>Pour de nombreuses applications, on peut utiliser un modèle dynamique réduit qui ne considère que les variables \(v\) et \(\omega\) :</p>
+                
+                <div class="equation">
+                    \begin{align}
+                    \begin{bmatrix} \dot{v} \\ \dot{\omega} \end{bmatrix} = 
+                    \begin{bmatrix} 
+                    -\frac{b_v}{m_v} & 0 \\
+                    0 & -\frac{b_\omega}{I_\omega}
+                    \end{bmatrix}
+                    \begin{bmatrix} v \\ \omega \end{bmatrix} +
+                    \begin{bmatrix} 
+                    \frac{1}{m_v r} & \frac{1}{m_v r} \\
+                    \frac{l}{I_\omega r} & -\frac{l}{I_\omega r}
+                    \end{bmatrix}
+                    \begin{bmatrix} \tau_r \\ \tau_l \end{bmatrix}
+                    \end{align}
+                </div>
+                
+                <p>où \(m_v = m + 2\frac{I_w}{r^2}\) et \(I_\omega = I + 2\frac{I_w l^2}{r^2}\) sont les masses et moments d'inertie effectifs.</p>
+                
+                <h3>5.6 Modèle des moteurs</h3>
+                
+                <p>Pour compléter le modèle dynamique, il est important de modéliser les moteurs qui actionnent les roues. Pour un moteur à courant continu, le couple est donné par :</p>
+                
+                <div class="equation">
+                    \begin{align}
+                    \tau = K_t i
+                    \end{align}
+                </div>
+                
+                <p>où \(K_t\) est la constante de couple et \(i\) est le courant.</p>
+                
+                <p>La dynamique électrique du moteur est décrite par :</p>
+                
+                <div class="equation">
+                    \begin{align}
+                    L\frac{di}{dt} + Ri + K_e\omega = u
+                    \end{align}
+                </div>
+                
+                <p>où \(L\) est l'inductance, \(R\) est la résistance, \(K_e\) est la constante de force contre-électromotrice, \(\omega\) est la vitesse angulaire, et \(u\) est la tension appliquée.</p>
+                
+                <p>Si l'inductance est négligeable, on peut simplifier :</p>
+                
+                <div class="equation">
+                    \begin{align}
+                    i = \frac{u - K_e\omega}{R}
+                    \end{align}
+                </div>
+                
+                <p>Ce qui donne le couple :</p>
+                
+                <div class="equation">
+                    \begin{align}
+                    \tau = K_t\frac{u - K_e\omega}{R} = K_m u - K_m\frac{K_e}{R}\omega
+                    \end{align}
+                </div>
+                
+                <p>où \(K_m = \frac{K_t}{R}\) est la constante de couple moteur.</p>
+                
+                <h3>5.7 Identification des paramètres</h3>
+                
+                <p>L'identification des paramètres du modèle dynamique est une étape importante pour obtenir un modèle précis. Plusieurs méthodes peuvent être utilisées :</p>
+                
+                <h4>5.7.1 Méthodes analytiques</h4>
+                
+                <p>Les paramètres peuvent être calculés à partir des propriétés physiques du robot (dimensions, masses, etc.) en utilisant des formules analytiques.</p>
+                
+                <h4>5.7.2 Méthodes expérimentales</h4>
+                
+                <p>Les paramètres peuvent être identifiés expérimentalement en mesurant la réponse du robot à différentes entrées et en ajustant les paramètres pour minimiser l'erreur entre le modèle et les mesures.</p>
+                
+                <h4>5.7.3 Méthodes d'optimisation</h4>
+                
+                <p>Des algorithmes d'optimisation peuvent être utilisés pour trouver les paramètres qui minimisent une fonction de coût, généralement l'erreur quadratique entre les prédictions du modèle et les mesures.</p>
+                
+                <h3>5.8 Implémentation en Python</h3>
+                
+                <p>Voici une implémentation du modèle dynamique en Python, avec simulation et visualisation :</p>
+                
+                <pre><code class="language-python">import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.patches import Circle
+from scipy.integrate import solve_ivp
+import math
+
+class RobotDynamics:
+    def __init__(self, m=10.0, I=1.0, I_w=0.1, r=0.1, l=0.25, b_v=0.5, c_v=0.1, b_omega=0.2, c_omega=0.05):
+        # Paramètres du robot
+        self.m = m  # masse du robot
+        self.I = I  # moment d'inertie du robot
+        self.I_w = I_w  # moment d'inertie d'une roue
+        self.r = r  # rayon des roues
+        self.l = l  # demi-distance entre les roues
+        
+        # Coefficients de frottement
+        self.b_v = b_v  # frottement visqueux en translation
+        self.c_v = c_v  # frottement de Coulomb en translation
+        self.b_omega = b_omega  # frottement visqueux en rotation
+        self.c_omega = c_omega  # frottement de Coulomb en rotation
+        
+        # Masses et moments d'inertie effectifs
+        self.m_v = m + 2 * I_w / r**2
+        self.I_omega = I + 2 * I_w * l**2 / r**2
+        
+        # État initial
+        self.x = 0.0
+        self.y = 0.0
+        self.theta = 0.0
+        self.v = 0.0
+        self.omega = 0.0
+        
+        # Historique des positions pour la visualisation
+        self.history_x = [self.x]
+        self.history_y = [self.y]
+    
+    def dynamics(self, t, state, tau_r, tau_l):
+        """
+        Fonction de dynamique pour l'intégration numérique.
+        
+        Args:
+            t (float): Temps
+            state (array): État du robot [x, y, theta, v, omega]
+            tau_r (float): Couple moteur droit
+            tau_l (float): Couple moteur gauche
+        
+        Returns:
+            array: Dérivée de l'état [dx/dt, dy/dt, dtheta/dt, dv/dt, domega/dt]
+        """
+        x, y, theta, v, omega = state
+        
+        # Calcul des forces de frottement
+        F_v = -self.b_v * v
+        if v != 0:
+            F_v -= self.c_v * np.sign(v)
+        
+        tau_omega = -self.b_omega * omega
+        if omega != 0:
+            tau_omega -= self.c_omega * np.sign(omega)
+        
+        # Calcul des accélérations
+        dv_dt = (tau_r + tau_l) / (self.m_v * self.r) + F_v / self.m_v
+        domega_dt = self.l * (tau_r - tau_l) / (self.I_omega * self.r) + tau_omega / self.I_omega
+        
+        # Calcul des vitesses
+        dx_dt = v * np.cos(theta)
+        dy_dt = v * np.sin(theta)
+        dtheta_dt = omega
+        
+        return [dx_dt, dy_dt, dtheta_dt, dv_dt, domega_dt]
+    
+    def update(self, tau_r, tau_l, dt):
+        """
+        Met à jour l'état du robot en utilisant le modèle dynamique.
+        
+        Args:
+            tau_r (float): Couple moteur droit
+            tau_l (float): Couple moteur gauche
+            dt (float): Pas de temps
+        """
+        # État initial
+        state0 = [self.x, self.y, self.theta, self.v, self.omega]
+        
+        # Intégration numérique
+        sol = solve_ivp(
+            lambda t, y: sel
+(Content truncated due to size limit. Use line ranges to read in chunks)

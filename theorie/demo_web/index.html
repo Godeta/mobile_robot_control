@@ -1,0 +1,144 @@
+pi<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cours Interactif sur la Robotique Mobile</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/prism.css">
+    <script src="js/prism.js"></script>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Cours Interactif sur la Robotique Mobile</h1>
+            <h2>Introduction à la robotique mobile et au modèle du robot unicycle à deux roues différentielles</h2>
+        </header>
+
+        <nav>
+            <ul>
+                <li><a href="#introduction">Introduction</a></li>
+                <li><a href="modele_geometrique.html">Modèle géométrique</a></li>
+                <li><a href="exemple_odometrie.html">Odométrie</a></li>
+                <li><a href="modele_cinematique.html">Modèle cinématique</a></li>
+                <li><a href="modele_dynamique.html">Modèle dynamique</a></li>
+                <li><a href="algorithme_deplacement.html">Algorithme de déplacement</a></li>
+                <li><a href="implementation_pid.html">Implémentation PID</a></li>
+                <li><a href="swarm_robotics.html">Swarm Robotics</a></li>
+                <li><a href="exemple_flotte_agv.html">Exemple de flotte d'AGV</a></li>
+                <li><a href="#conclusion">Conclusion</a></li>
+            </ul>
+        </nav>
+
+        <main>
+            <section id="introduction">
+                <h2>1. Introduction à la robotique mobile</h2>
+                <p>La robotique mobile est un domaine fascinant qui étudie les systèmes robotiques capables de se déplacer dans leur environnement. Parmi les différentes architectures de robots mobiles, le robot unicycle à deux roues différentielles est l'un des modèles les plus répandus en raison de sa simplicité mécanique et de ses propriétés cinématiques intéressantes.</p>
+                
+                <p>Ce cours interactif vous présente en détail le modèle du robot unicycle, en commençant par ses aspects géométriques et en progressant vers des concepts plus avancés comme le contrôle PID et la robotique en essaim pour la gestion de flottes de robots.</p>
+                
+                <h3>Caractéristiques du robot unicycle à deux roues différentielles</h3>
+                
+                <p>Le robot unicycle est caractérisé par :</p>
+                <ul>
+                    <li>Deux roues motrices indépendantes placées sur un même axe</li>
+                    <li>Une ou plusieurs roues folles (ou "castor") pour assurer la stabilité</li>
+                    <li>Une capacité à tourner sur place (en faisant tourner les roues en sens opposés)</li>
+                    <li>Des contraintes non-holonomes qui limitent ses mouvements instantanés</li>
+                </ul>
+                
+                <p>Le modèle cinématique de base du robot unicycle est donné par les équations suivantes :</p>
+                
+                <div class="equation">
+                    \begin{align}
+                    x' &= \frac{r}{2}(v_r+v_l) \cos(\theta) \\
+                    y' &= \frac{r}{2}(v_r+v_l) \sin(\theta) \\
+                    \theta' &= \frac{r}{l} (v_r-v_l)
+                    \end{align}
+                </div>
+                
+                <p>où :</p>
+                <ul>
+                    <li>\(v_r\) est la vitesse de la roue droite</li>
+                    <li>\(v_l\) est la vitesse de la roue gauche</li>
+                    <li>\(\theta\) est l'angle de direction du robot</li>
+                    <li>\(r\) est le rayon des roues</li>
+                    <li>\(l\) est la demi-distance entre les roues</li>
+                </ul>
+                
+                <p>Ces équations fondamentales seront explorées en détail dans les sections suivantes.</p>
+                
+                <div class="robot-animation">
+                    <canvas id="robotCanvas" width="400" height="400"></canvas>
+                    <div class="controls">
+                        <label for="leftWheel">Vitesse roue gauche:</label>
+                        <input type="range" id="leftWheel" min="-5" max="5" value="2" step="0.1">
+                        <span id="leftWheelValue">2</span>
+                        
+                        <label for="rightWheel">Vitesse roue droite:</label>
+                        <input type="range" id="rightWheel" min="-5" max="5" value="2" step="0.1">
+                        <span id="rightWheelValue">2</span>
+                        
+                        <button id="resetButton">Réinitialiser</button>
+                    </div>
+                </div>
+            </section>
+
+            <section id="conclusion">
+                <h2>9. Conclusion et perspectives</h2>
+                
+                <p>Ce cours interactif a présenté une exploration complète du robot unicycle à deux roues différentielles, depuis ses aspects géométriques fondamentaux jusqu'à des applications avancées comme la robotique en essaim pour la logistique.</p>
+                
+                <h3>Récapitulatif des concepts clés</h3>
+                
+                <p>Nous avons couvert les concepts suivants :</p>
+                <ul>
+                    <li>Le modèle géométrique du robot unicycle et ses contraintes non-holonomes</li>
+                    <li>L'odométrie pour l'estimation de la position du robot</li>
+                    <li>Le modèle cinématique qui relie les vitesses des roues au mouvement du robot</li>
+                    <li>Le modèle dynamique qui prend en compte les forces et les couples</li>
+                    <li>Les algorithmes de déplacement vers un point cible</li>
+                    <li>Le contrôleur PID pour le suivi de trajectoire et la régulation de vitesse</li>
+                    <li>La robotique en essaim pour la gestion d'une flotte d'AGV en logistique</li>
+                </ul>
+                
+                <h3>Applications pratiques</h3>
+                
+                <p>Ces concepts ont de nombreuses applications pratiques :</p>
+                <ul>
+                    <li>Robots de service (nettoyage, livraison)</li>
+                    <li>Véhicules à guidage automatique (AGV) dans les entrepôts</li>
+                    <li>Robots d'exploration (planétaire, sous-marine)</li>
+                    <li>Robots agricoles (désherbage, récolte)</li>
+                    <li>Robots de surveillance et de sécurité</li>
+                </ul>
+                
+                <h3>Perspectives futures</h3>
+                
+                <p>Le domaine de la robotique mobile continue d'évoluer rapidement, avec plusieurs tendances émergentes :</p>
+                <ul>
+                    <li>L'intégration de l'intelligence artificielle et de l'apprentissage automatique</li>
+                    <li>Le développement de robots plus autonomes et adaptatifs</li>
+                    <li>L'amélioration des capacités de perception et de compréhension de l'environnement</li>
+                    <li>La collaboration homme-robot plus intuitive et naturelle</li>
+                    <li>L'optimisation énergétique pour des robots plus durables</li>
+                </ul>
+                
+                <h3>Mot de la fin</h3>
+                
+                <p>La robotique mobile est un domaine passionnant qui combine des aspects de mécanique, d'électronique, d'informatique et de mathématiques. Les concepts présentés dans ce cours constituent une base solide pour comprendre et développer des robots mobiles, mais il reste encore beaucoup à explorer et à découvrir.</p>
+                
+                <p>Nous espérons que ce cours vous a fourni les outils nécessaires pour approfondir votre compréhension de la robotique mobile et vous a inspiré pour vos propres projets et recherches dans ce domaine fascinant.</p>
+            </section>
+        </main>
+
+        <footer>
+            <p>&copy; 2025 Cours Interactif sur la Robotique Mobile</p>
+        </footer>
+    </div>
+
+    <script src="js/robot-animation.js"></script>
+</body>
+</html>

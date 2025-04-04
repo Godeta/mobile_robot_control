@@ -3,7 +3,7 @@ Projet contrôle d'un robot e-puck, théorie en python, simulation avec matlab e
 
 ## Théorie en Python
 Dans ce projet, nous avons utilisé Python pour développer des algorithmes de contrôle de base pour le robot e-puck. 
- [Theorie demo basique](videos/gif/theorie.gif).
+ [Theorie demo basique](videos/gif_demo/theorie_epuck_demo.gif).
 ## Simulation avec MATLAB et CoppeliaSim
 Pour valider les algorithmes de contrôle, nous avons utilisé MATLAB et CoppeliaSim. MATLAB pour simuler les modèles physiques du robot e-puck et les algorithmes de contrôle. CoppeliaSim a été utilisé pour simuler l'environnement.
 

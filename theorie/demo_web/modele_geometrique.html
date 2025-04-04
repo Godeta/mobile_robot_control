@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modèle Géométrique - Robotique Mobile</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/prism.css">
+    <script src="js/prism.js"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Cours Interactif sur la Robotique Mobile</h1>
+            <h2>Modèle Géométrique du Robot Unicycle</h2>
+        </header>
+
+        <nav>
+            <ul>
+                <li><a href="index.html">Introduction</a></li>
+                <li><a href="modele_geometrique.html">Modèle géométrique</a></li>
+                <li><a href="exemple_odometrie.html">Odométrie</a></li>
+                <li><a href="modele_cinematique.html">Modèle cinématique</a></li>
+                <li><a href="modele_dynamique.html">Modèle dynamique</a></li>
+                <li><a href="algorithme_deplacement.html">Algorithme de déplacement</a></li>
+                <li><a href="implementation_pid.html">Implémentation PID</a></li>
+                <li><a href="swarm_robotics.html">Swarm Robotics</a></li>
+                <li><a href="exemple_flotte_agv.html">Exemple de flotte d'AGV</a></li>
+                <li><a href="index.html#conclusion">Conclusion</a></li>
+            </ul>
+        </nav>
+
+        <main>
+            <section>
+                <h2>2. Modèle géométrique du robot unicycle</h2>
+                
+                <p>Le modèle géométrique d'un robot mobile permet de décrire sa position et son orientation dans l'espace. Pour un robot unicycle à deux roues différentielles, ce modèle est particulièrement important car il constitue la base pour comprendre son comportement cinématique et dynamique.</p>
+                
+                <h3>2.1 Configuration du robot</h3>
+                
+                <p>La configuration d'un robot unicycle est définie par trois paramètres :</p>
+                <ul>
+                    <li>La position du centre du robot dans le plan \((x, y)\)</li>
+                    <li>L'orientation du robot \(\theta\) par rapport à l'axe des abscisses</li>
+                </ul>
+                
+                <p>Ces trois paramètres forment le vecteur de configuration \(q = [x, y, \theta]^T\) qui décrit complètement la position et l'orientation du robot dans l'espace.</p>
+                
+                <div class="image-container">
+                    <img src="images/robot_unicycle_schema.png" alt="Schéma d'un robot unicycle" width="400">
+                    <p class="image-caption">Figure 1: Schéma d'un robot unicycle à deux roues différentielles</p>
+                </div>
+                
+                <h3>2.2 Repères et transformations</h3>
+                
+                <p>Pour décrire le mouvement du robot, nous utilisons deux repères :</p>
+                <ul>
+                    <li><strong>Repère global</strong> \(\mathcal{R}_0 = (O, \vec{x}_0, \vec{y}_0)\) : repère fixe lié à l'environnement</li>
+                    <li><strong>Repère local</strong> \(\mathcal{R}_r = (C, \vec{x}_r, \vec{y}_r)\) : repère mobile lié au robot, où \(C\) est le centre du robot</li>
+                </ul>
+                
+                <p>La transformation entre ces deux repères est donnée par une matrice de rotation et un vecteur de translation :</p>
+                
+                <div class="equation">
+                    \begin{align}
+                    R(\theta) = \begin{bmatrix} \cos\theta & -\sin\theta \\ \sin\theta & \cos\theta \end{bmatrix}
+                    \end{align}
+                </div>
+                
+                <p>Cette matrice permet de convertir les coordonnées d'un point du repère local au repère global :</p>
+                
+                <div class="equation">
+                    \begin{align}
+                    \begin{bmatrix} x_0 \\ y_0 \end{bmatrix} = \begin{bmatrix} x \\ y \end{bmatrix} + R(\theta) \begin{bmatrix} x_r \\ y_r \end{bmatrix}
+                    \end{align}
+                </div>
+                
+                <p>où \((x_0, y_0)\) sont les coordonnées dans le repère global, \((x, y)\) est la position du centre du robot, et \((x_r, y_r)\) sont les coordonnées dans le repère local.</p>
+                
+                <h3>2.3 Contraintes non-holonomes</h3>
+                
+                <p>Le robot unicycle est soumis à des contraintes non-holonomes qui limitent ses mouvements instantanés. La principale contrainte est que le robot ne peut pas se déplacer latéralement (perpendiculairement à son axe).</p>
+                
+                <p>Mathématiquement, cette contrainte s'exprime par :</p>
+                
+                <div class="equation">
+                    \begin{align}
+                    \dot{x}\sin\theta - \dot{y}\cos\theta = 0
+                    \end{align}
+                </div>
+                
+                <p>Cette équation signifie que la composante de la vitesse perpendiculaire à l'axe du robot est nulle, ce qui correspond à la condition de roulement sans glissement.</p>
+                
+                <div class="note">
+                    <p>Les contraintes non-holonomes ne limitent pas l'espace des configurations que le robot peut atteindre, mais elles limitent la façon dont il peut se déplacer entre ces configurations.</p>
+                </div>
+                
+                <h3>2.4 Paramètres géométriques</h3>
+                
+                <p>Les principaux paramètres géométriques du robot unicycle sont :</p>
+                <ul>
+                    <li>\(r\) : rayon des roues</li>
+                    <li>\(l\) : demi-distance entre les roues (la distance totale entre les roues est \(2l\))</li>
+                    <li>\(h\) : hauteur du centre de masse par rapport à l'axe des roues</li>
+                </ul>
+                
+                <p>Ces paramètres sont essentiels pour établir le modèle cinématique et dynamique du robot.</p>
+                
+                <h3>2.5 Centre Instantané de Rotation (CIR)</h3>
+                
+                <p>Lorsque les deux roues tournent à des vitesses différentes, le robot décrit un arc de cercle autour d'un point appelé Centre Instantané de Rotation (CIR).</p>
+                
+                <p>Si \(v_r\) est la vitesse de la roue droite et \(v_l\) est la vitesse de la roue gauche, la position du CIR est donnée par :</p>
+                
+                <div class="equation">
+                    \begin{align}
+                    R_{CIR} = \frac{l(v_r + v_l)}{v_r - v_l}
+                    \end{align}
+                </div>
+                
+                <p>où \(R_{CIR}\) est la distance du centre du robot au CIR.</p>
+                
+                <p>Cas particuliers :</p>
+                <ul>
+                    <li>Si \(v_r = v_l\), le robot se déplace en ligne droite (\(R_{CIR} = \infty\))</li>
+                    <li>Si \(v_r = -v_l\), le robot tourne sur place (\(R_{CIR} = 0\))</li>
+                    <li>Si \(v_r > v_l\), le robot tourne vers la gauche</li>
+                    <li>Si \(v_r < v_l\), le robot tourne vers la droite</li>
+                </ul>
+                
+                <h3>2.6 Implémentation en Python</h3>
+                
+                <p>Voici une implémentation simple du modèle géométrique en Python :</p>
+                
+                <pre><code class="language-python">import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.patches import Circle, Rectangle
+import math
+
+class RobotUnicycle:
+    def __init__(self, x=0, y=0, theta=0, wheel_radius=0.1, axle_length=0.5):
+        # Configuration du robot
+        self.x = x
+        self.y = y
+        self.theta = theta
+        
+        # Paramètres géométriques
+        self.r = wheel_radius  # rayon des roues
+        self.l = axle_length / 2  # demi-distance entre les roues
+        
+    def get_transformation_matrix(self):
+        """Retourne la matrice de transformation du repère local au repère global."""
+        cos_theta = math.cos(self.theta)
+        sin_theta = math.sin(self.theta)
+        
+        R = np.array([[cos_theta, -sin_theta],
+                      [sin_theta, cos_theta]])
+        
+        return R
+    
+    def local_to_global(self, x_local, y_local):
+        """Convertit des coordonnées du repère local au repère global."""
+        R = self.get_transformation_matrix()
+        p_local = np.array([x_local, y_local])
+        p_global = np.array([self.x, self.y]) + R @ p_local
+        
+        return p_global
+    
+    def get_wheel_positions(self):
+        """Retourne les positions des roues dans le repère global."""
+        left_wheel = self.local_to_global(-self.l, 0)
+        right_wheel = self.local_to_global(self.l, 0)
+        
+        return left_wheel, right_wheel
+    
+    def get_cir(self, v_r, v_l):
+        """Calcule la position du Centre Instantané de Rotation."""
+        if v_r == v_l:
+            # Mouvement en ligne droite
+            return None  # CIR à l'infini
+        
+        R_cir = self.l * (v_r + v_l) / (v_r - v_l)
+        cir_local_x = 0
+        cir_local_y = R_cir
+        
+        cir_global = self.local_to_global(cir_local_x, cir_local_y)
+        
+        return cir_global
+    
+    def plot(self, ax, v_r=None, v_l=None):
+        """Affiche le robot sur l'axe donné."""
+        # Corps du robot
+        robot_circle = Circle((self.x, self.y), 0.2, fill=False, color='blue')
+        ax.add_patch(robot_circle)
+        
+        # Direction
+        direction = self.local_to_global(0.3, 0)
+        ax.plot([self.x, direction[0]], [self.y, direction[1]], 'b-')
+        
+        # Roues
+        left_wheel, right_wheel = self.get_wheel_positions()
+        wheel_width = 0.1
+        wheel_length = 0.2
+        
+        # Calcul des coins des rectangles représentant les roues
+        left_wheel_corners = [
+            self.local_to_global(-self.l - wheel_width/2, -wheel_length/2),
+            self.local_to_global(-self.l + wheel_width/2, -wheel_length/2),
+            self.local_to_global(-self.l + wheel_width/2, wheel_length/2),
+            self.local_to_global(-self.l - wheel_width/2, wheel_length/2)
+        ]
+        
+        right_wheel_corners = [
+            self.local_to_global(self.l - wheel_width/2, -wheel_length/2),
+            self.local_to_global(self.l + wheel_width/2, -wheel_length/2),
+            self.local_to_global(self.l + wheel_width/2, wheel_length/2),
+            self.local_to_global(self.l - wheel_width/2, wheel_length/2)
+        ]
+        
+        # Conversion en arrays pour matplotlib
+        left_wheel_x = [p[0] for p in left_wheel_corners]
+        left_wheel_y = [p[1] for p in left_wheel_corners]
+        right_wheel_x = [p[0] for p in right_wheel_corners]
+        right_wheel_y = [p[1] for p in right_wheel_corners]
+        
+        # Fermer les polygones
+        left_wheel_x.append(left_wheel_x[0])
+        left_wheel_y.append(left_wheel_y[0])
+        right_wheel_x.append(right_wheel_x[0])
+        right_wheel_y.append(right_wheel_y[0])
+        
+        # Tracer les roues
+        ax.plot(left_wheel_x, left_wheel_y, 'r-')
+        ax.plot(right_wheel_x, right_wheel_y, 'r-')
+        
+        # Tracer le CIR si les vitesses sont fournies
+        if v_r is not None and v_l is not None and v_r != v_l:
+            cir = self.get_cir(v_r, v_l)
+            if cir is not None:
+                ax.plot(cir[0], cir[1], 'go', markersize=8)
+                ax.plot([self.x, cir[0]], [self.y, cir[1]], 'g--', alpha=0.5)
+                
+                # Calculer le rayon du cercle de rotation
+                R_cir = np.linalg.norm([cir[0] - self.x, cir[1] - self.y])
+                circle = Circle((cir[0], cir[1]), R_cir, fill=False, color='green', alpha=0.3)
+                ax.add_patch(circle)
+                
+                # Ajouter une légende
+                ax.text(cir[0] + 0.1, cir[1] + 0.1, 'CIR', fontsize=10)
+                ax.text(self.x + 0.1, self.y + 0.1, f'R = {R_cir:.2f}', fontsize=10)
+
+# Exemple d'utilisation
+if __name__ == "__main__":
+    # Créer un robot
+    robot = RobotUnicycle(x=0, y=0, theta=np.pi/4)
+    
+    # Créer une figure
+    fig, ax = plt.subplots(figsize=(8, 8))
+    
+    # Définir les vitesses des roues
+    v_r = 2.0  # vitesse de la roue droite
+    v_l = 1.0  # vitesse de la roue gauche
+    
+    # Afficher le robot
+    robot.plot(ax, v_r, v_l)
+    
+    # Configurer les axes
+    ax.set_xlim(-3, 3)
+    ax.set_ylim(-3, 3)
+    ax.set_aspect('equal')
+    ax.grid(True)
+    ax.set_xlabel('X')
+    ax.set_ylabel('Y')
+    ax.set_title('Modèle géométrique du robot unicycle')
+    
+    plt.show()
+</code></pre>
+                
+                <p>Cette implémentation permet de visualiser le robot unicycle, ses roues, et le Centre Instantané de Rotation pour différentes vitesses des roues.</p>
+                
+                <h3>2.7 Conclusion</h3>
+                
+                <p>Le modèle géométrique du robot unicycle est fondamental pour comprendre son comportement dans l'espace. Il définit la configuration du robot, les transformations entre les repères, et les contraintes non-holonomes qui limitent ses mouvements instantanés.</p>
+                
+                <p>Dans la section suivante, nous verrons comment utiliser ce modèle géométrique pour l'odométrie, c'est-à-dire l'estimation de la position du robot à partir des rotations de ses roues.</p>
+                
+                <div class="navigation-buttons">
+                    <a href="index.html" class="prev-button">← Introduction</a>
+                    <a href="exemple_odometrie.html" class="next-button">Odométrie →</a>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>&copy; 2025 Cours Interactif sur la Robotique Mobile</p>
+        </footer>
+    </div>
+
+    <script src="js/robot-animation.js"></script>
+</body>
+</html>

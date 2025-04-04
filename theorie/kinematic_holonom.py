@@ -1,0 +1,1 @@
+#cinematique holonome https://perso.univ-lyon1.fr/marc.buffat/COURS/MECA_HTML/Cinematique_mecanum.html 

@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Swarm Robotics - Robotique Mobile</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/prism.css">
+    <script src="js/prism.js"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Cours Interactif sur la Robotique Mobile</h1>
+            <h2>Swarm Robotics et Coordination Multi-robots</h2>
+        </header>
+
+        <nav>
+            <ul>
+                <li><a href="index.html">Introduction</a></li>
+                <li><a href="modele_geometrique.html">Modèle géométrique</a></li>
+                <li><a href="exemple_odometrie.html">Odométrie</a></li>
+                <li><a href="modele_cinematique.html">Modèle cinématique</a></li>
+                <li><a href="modele_dynamique.html">Modèle dynamique</a></li>
+                <li><a href="algorithme_deplacement.html">Algorithme de déplacement</a></li>
+                <li><a href="implementation_pid.html">Implémentation PID</a></li>
+                <li><a href="swarm_robotics.html">Swarm Robotics</a></li>
+                <li><a href="exemple_flotte_agv.html">Exemple de flotte d'AGV</a></li>
+                <li><a href="index.html#conclusion">Conclusion</a></li>
+            </ul>
+        </nav>
+
+        <main>
+            <section>
+                <h2>8. Swarm Robotics et Coordination Multi-robots</h2>
+                
+                <p>La robotique en essaim (swarm robotics) est un domaine qui étudie la coordination de multiples robots simples pour accomplir des tâches complexes. Cette section présente les principes de la robotique en essaim et ses applications, notamment pour les AGV (Automated Guided Vehicles) en logistique.</p>
+                
+                <h3>8.1 Principes de la robotique en essaim</h3>
+                
+                <p>La robotique en essaim s'inspire des comportements collectifs observés dans la nature, comme les colonies de fourmis, les bancs de poissons ou les essaims d'abeilles. Ses principes fondamentaux sont :</p>
+                
+                <ul>
+                    <li><strong>Décentralisation</strong> : Absence de contrôle central, chaque robot prend ses décisions localement</li>
+                    <li><strong>Auto-organisation</strong> : Émergence de comportements collectifs complexes à partir d'interactions simples</li>
+                    <li><strong>Simplicité individuelle</strong> : Chaque robot a des capacités limitées, mais l'ensemble forme un système puissant</li>
+                    <li><strong>Robustesse</strong> : Le système continue à fonctionner même si certains robots tombent en panne</li>
+                    <li><strong>Scalabilité</strong> : Le système peut fonctionner avec un nombre variable de robots</li>
+                </ul>
+                
+                <h3>8.2 Comportements de base</h3>
+                
+                <p>Plusieurs comportements de base sont utilisés en robotique en essaim :</p>
+                
+                <h4>8.2.1 Agrégation</h4>
+                
+                <p>L'agrégation consiste à rassembler les robots dans une zone spécifique. Ce comportement peut être implémenté en faisant en sorte que chaque robot se déplace vers les autres robots qu'il détecte.</p>
+                
+                <h4>8.2.2 Dispersion</h4>
+                
+                <p>La dispersion est l'opposé de l'agrégation : les robots se répartissent dans l'espace pour couvrir une zone. Ce comportement est utile pour l'exploration ou la surveillance.</p>
+                
+                <h4>8.2.3 Formation</h4>
+                
+                <p>La formation consiste à organiser les robots selon une structure géométrique spécifique, comme une ligne, un cercle ou une grille. Ce comportement est utile pour le transport coordonné ou la surveillance.</p>
+                
+                <h4>8.2.4 Suivi</h4>
+                
+                <p>Le suivi consiste à faire en sorte que les robots suivent un leader ou une trajectoire spécifique. Ce comportement est utile pour le déplacement en groupe.</p>
+                
+                <h4>8.2.5 Évitement de collision</h4>
+                
+                <p>L'évitement de collision est essentiel pour que les robots puissent se déplacer sans se heurter. Ce comportement peut être implémenté en utilisant des champs de potentiel répulsif.</p>
+                
+                <h3>8.3 Algorithmes de coordination</h3>
+                
+                <p>Plusieurs algorithmes sont utilisés pour coordonner les robots dans un essaim :</p>
+                
+                <h4>8.3.1 Consensus</h4>
+                
+                <p>Les algorithmes de consensus permettent aux robots de se mettre d'accord sur une valeur commune, comme une direction de déplacement ou une position cible. Un exemple simple est la moyenne des valeurs mesurées par chaque robot.</p>
+                
+                <div class="equation">
+                    \begin{align}
+                    x_i(t+1) = \frac{1}{|N_i|+1} \left( x_i(t) + \sum_{j \in N_i} x_j(t) \right)
+                    \end{align}
+                </div>
+                
+                <p>où \(x_i(t)\) est la valeur du robot \(i\) au temps \(t\), et \(N_i\) est l'ensemble des voisins du robot \(i\).</p>
+                
+                <h4>8.3.2 Flocking (vol en formation)</h4>
+                
+                <p>L'algorithme de flocking, proposé par Craig Reynolds, repose sur trois règles simples :</p>
+                <ul>
+                    <li><strong>Séparation</strong> : Éviter les collisions avec les voisins</li>
+                    <li><strong>Alignement</strong> : Se déplacer dans la même direction que les voisins</li>
+                    <li><strong>Cohésion</strong> : Se rapprocher du centre de masse des voisins</li>
+                </ul>
+                
+                <p>Ces règles peuvent être implémentées comme des forces virtuelles agissant sur chaque robot :</p>
+                
+                <div class="equation">
+                    \begin{align}
+                    \vec{F}_i = w_s \vec{F}_{sep} + w_a \vec{F}_{align} + w_c \vec{F}_{coh}
+                    \end{align}
+                </div>
+                
+                <p>où \(w_s\), \(w_a\), et \(w_c\) sont des poids pour chaque comportement.</p>
+                
+                <h4>8.3.3 Optimisation par essaim particulaire (PSO)</h4>
+                
+                <p>L'optimisation par essaim particulaire est un algorithme d'optimisation inspiré par le comportement des essaims. Chaque particule (robot) se déplace dans l'espace de recherche en fonction de sa propre meilleure position et de la meilleure position globale.</p>
+                
+                <div class="equation">
+                    \begin{align}
+                    \vec{v}_i(t+1) &= w \vec{v}_i(t) + c_1 r_1 (\vec{p}_i - \vec{x}_i(t)) + c_2 r_2 (\vec{g} - \vec{x}_i(t)) \\
+                    \vec{x}_i(t+1) &= \vec{x}_i(t) + \vec{v}_i(t+1)
+                    \end{align}
+                </div>
+                
+                <p>où \(\vec{x}_i\) et \(\vec{v}_i\) sont la position et la vitesse du robot \(i\), \(\vec{p}_i\) est la meilleure position trouvée par le robot \(i\), \(\vec{g}\) est la meilleure position globale, \(w\), \(c_1\), et \(c_2\) sont des paramètres, et \(r_1\) et \(r_2\) sont des nombres aléatoires.</p>
+                
+                <h4>8.3.4 Algorithmes basés sur les phéromones</h4>
+                
+                <p>Inspirés par les fourmis, ces algorithmes utilisent des phéromones virtuelles pour communiquer indirectement. Les robots déposent des phéromones dans l'environnement, qui s'évaporent avec le temps, et suivent les gradients de phéromones.</p>
+                
+                <div class="equation">
+                    \begin{align}
+                    \tau_{ij}(t+1) = (1-\rho) \tau_{ij}(t) + \sum_{k} \Delta \tau_{ij}^k
+                    \end{align}
+                </div>
+                
+                <p>où \(\tau_{ij}\) est la quantité de phéromone sur le chemin entre \(i\) et \(j\), \(\rho\) est le taux d'évaporation, et \(\Delta \tau_{ij}^k\) est la quantité de phéromone déposée par le robot \(k\).</p>
+                
+                <h3>8.4 Communication et perception</h3>
+                
+                <p>La communication et la perception sont essentielles pour la robotique en essaim :</p>
+                
+                <h4>8.4.1 Communication directe</h4>
+                
+                <p>Les robots peuvent communiquer directement par des signaux radio, infrarouge, ou acoustique. Cette communication peut être locale (limitée à un certain rayon) ou globale.</p>
+                
+                <h4>8.4.2 Communication indirecte (stigmergie)</h4>
+                
+                <p>La stigmergie est une forme de communication indirecte où les robots modifient l'environnement (par exemple, en déposant des phéromones virtuelles) pour communiquer avec les autres robots.</p>
+                
+                <h4>8.4.3 Perception locale</h4>
+                
+                <p>Chaque robot perçoit son environnement local à l'aide de capteurs comme les caméras, les lidars, ou les capteurs de distance. Cette perception est généralement limitée en portée et en précision.</p>
+                
+                <h3>8.5 Applications en logistique</h3>
+                
+                <p>La robotique en essaim a de nombreuses applications en logistique, notamment pour les AGV :</p>
+                
+                <h4>8.5.1 Gestion de flotte d'AGV</h4>
+                
+                <p>Les algorithmes de robotique en essaim peuvent être utilisés pour coordonner une flotte d'AGV dans un entrepôt ou une usine. Les AGV peuvent se répartir les tâches, éviter les collisions, et optimiser leurs trajectoires de manière décentralisée.</p>
+                
+                <h4>8.5.2 Routage et planification de trajectoire</h4>
+                
+                <p>Les algorithmes basés sur les phéromones peuvent être utilisés pour le routage des AGV. Les AGV déposent des phéromones virtuelles sur les chemins qu'ils empruntent, ce qui permet d'identifier les chemins les plus utilisés et de répartir le trafic.</p>
+                
+                <h4>8.5.3 Équilibrage de charge</h4>
+                
+                <p>Les algorithmes de consensus peuvent être utilisés pour équilibrer la charge de travail entre les AGV. Les AGV peuvent échanger des informations sur leur charge de travail et redistribuer les tâches en conséquence.</p>
+                
+                <h4>8.5.4 Adaptation aux changements</h4>
+                
+                <p>La nature décentralisée de la robotique en essaim permet aux AGV de s'adapter rapidement aux changements dans l'environnement, comme l'ajout ou la suppression de tâches, ou les modifications de la disposition de l'entrepôt.</p>
+                
+                <h3>8.6 Implémentation en Python</h3>
+                
+                <p>Voici une implémentation simple d'un algorithme de flocking en Python :</p>
+                
+                <pre><code class="language-python">import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation
+import math
+
+class Robot:
+    def __init__(self, x, y, theta, v=0.5, omega_max=1.0):
+        # Position et orientation
+        self.x = x
+        self.y = y
+        self.theta = theta
+        
+        # Vitesse
+        self.v = v  # vitesse linéaire constante
+        self.omega = 0  # vitesse angulaire
+        self.omega_max = omega_max
+        
+        # Historique pour la visualisation
+        self.history_x = [self.x]
+        self.history_y = [self.y]
+    
+    def update(self, dt):
+        """
+        Met à jour la position et l'orientation du robot.
+        
+        Args:
+            dt (float): Pas de temps
+        """
+        # Mise à jour de l'orientation
+        self.theta += self.omega * dt
+        
+        # Normalisation de l'angle
+        self.theta = math.atan2(math.sin(self.theta), math.cos(self.theta))
+        
+        # Mise à jour de la position
+        self.x += self.v * math.cos(self.theta) * dt
+        self.y += self.v * math.sin(self.theta) * dt
+        
+        # Enregistrement pour la visualisation
+        self.history_x.append(self.x)
+        self.history_y.append(self.y)
+    
+    def compute_flocking_forces(self, robots, separation_radius=1.0, alignment_radius=3.0, cohesion_radius=5.0):
+        """
+        Calcule les forces de flocking (séparation, alignement, cohésion).
+        
+        Args:
+            robots (list): Liste des robots dans l'essaim
+            separation_radius (float): Rayon pour la séparation
+            alignment_radius (float): Rayon pour l'alignement
+            cohesion_radius (float): Rayon pour la cohésion
+        
+        Returns:
+            tuple: Forces de séparation, alignement et cohésion (vecteurs 2D)
+        """
+        # Initialisation des forces
+        separation_force = np.array([0.0, 0.0])
+        alignment_force = np.array([0.0, 0.0])
+        cohesion_force = np.array([0.0, 0.0])
+        
+        # Compteurs pour les voisins
+        separation_count = 0
+        alignment_count = 0
+        cohesion_count = 0
+        
+        # Position actuelle du robot
+        pos = np.array([self.x, self.y])
+        
+        # Direction actuelle du robot
+        direction = np.array([math.cos(self.theta), math.sin(self.theta)])
+        
+        # Pour chaque autre robot
+        for robot in robots:
+            if robot is self:
+                continue
+            
+            # Position de l'autre robot
+            other_pos = np.array([robot.x, robot.y])
+            
+            # Vecteur de distance
+            diff = pos - other_pos
+            
+            # Distance euclidienne
+            distance = np.linalg.norm(diff)
+            
+            # Séparation
+            if distance < separation_radius:
+                # Force de répulsion inversement proportionnelle à la distance
+                if distance > 0:  # Éviter la division par zéro
+                    separation_force += diff / distance
+                separation_count += 1
+            
+            # Alignement
+            if distance < alignment_radius:
+                # Direction de l'autre robot
+                other_direction = np.array([math.cos(robot.theta), math.sin(robot.theta)])
+                alignment_force += other_direction
+                alignment_count += 1
+            
+            # Cohésion
+            if distance < cohesion_radius:
+                cohesion_force += other_pos
+                cohesion_count += 1
+        
+        # Normalisation des forces
+        if separation_count > 0:
+            separation_force /= separation_count
+        
+        if alignment_count > 0:
+            alignment_force /= alignment_count
+            # Normalisation
+            norm = np.linalg.norm(alignment_force)
+            if norm > 0:
+                alignment_force /= norm
+        
+        if cohesion_count > 0:
+            cohesion_force /= cohesion_count
+            # Vecteur vers le centre de masse
+            cohesion_force = cohesion_force - pos
+            # Normalisation
+            norm = np.linalg.norm(cohesion_force)
+            if norm > 0:
+                cohesion_force /= norm
+        
+        return separation_force, alignment_force, cohesion_force
+    
+    def apply_flocking(self, robots, w_sep=1.5, w_align=1.0, w_coh=1.0, dt=0.1):
+        """
+        Applique l'algorithme de flocking.
+        
+        Args:
+            robots (list): Liste des robots dans l'essaim
+            w_sep (float): Poids pour la séparation
+            w_align (float): Poids pour l'ali
+(Content truncated due to size limit. Use line ranges to read in chunks)

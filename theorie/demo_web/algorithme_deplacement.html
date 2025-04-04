@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Algorithme de Déplacement - Robotique Mobile</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/prism.css">
+    <script src="js/prism.js"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Cours Interactif sur la Robotique Mobile</h1>
+            <h2>Algorithme de Déplacement jusqu'à un Point</h2>
+        </header>
+
+        <nav>
+            <ul>
+                <li><a href="index.html">Introduction</a></li>
+                <li><a href="modele_geometrique.html">Modèle géométrique</a></li>
+                <li><a href="exemple_odometrie.html">Odométrie</a></li>
+                <li><a href="modele_cinematique.html">Modèle cinématique</a></li>
+                <li><a href="modele_dynamique.html">Modèle dynamique</a></li>
+                <li><a href="algorithme_deplacement.html">Algorithme de déplacement</a></li>
+                <li><a href="implementation_pid.html">Implémentation PID</a></li>
+                <li><a href="swarm_robotics.html">Swarm Robotics</a></li>
+                <li><a href="exemple_flotte_agv.html">Exemple de flotte d'AGV</a></li>
+                <li><a href="index.html#conclusion">Conclusion</a></li>
+            </ul>
+        </nav>
+
+        <main>
+            <section>
+                <h2>6. Algorithme de déplacement jusqu'à un point</h2>
+                
+                <p>Un des problèmes fondamentaux en robotique mobile est de déplacer un robot d'une position initiale à une position cible. Cette section présente plusieurs algorithmes permettant à un robot unicycle de se déplacer jusqu'à un point cible.</p>
+                
+                <h3>6.1 Formulation du problème</h3>
+                
+                <p>Le problème de déplacement jusqu'à un point peut être formulé comme suit :</p>
+                <ul>
+                    <li>État initial : position \((x_0, y_0)\) et orientation \(\theta_0\) du robot</li>
+                    <li>État cible : position \((x_g, y_g)\) du point cible</li>
+                    <li>Objectif : trouver les commandes de vitesse des roues \(v_r(t)\) et \(v_l(t)\) qui amènent le robot au point cible</li>
+                </ul>
+                
+                <p>Notons que l'orientation finale du robot n'est généralement pas spécifiée pour ce problème.</p>
+                
+                <h3>6.2 Métriques d'erreur</h3>
+                
+                <p>Pour mesurer la distance entre le robot et le point cible, on utilise généralement les métriques suivantes :</p>
+                
+                <h4>6.2.1 Erreur de position</h4>
+                
+                <p>L'erreur de position est la distance euclidienne entre le robot et le point cible :</p>
+                
+                <div class="equation">
+                    \begin{align}
+                    \rho = \sqrt{(x_g - x)^2 + (y_g - y)^2}
+                    \end{align}
+                </div>
+                
+                <h4>6.2.2 Erreur d'angle</h4>
+                
+                <p>L'erreur d'angle est l'angle entre l'orientation actuelle du robot et la direction vers le point cible :</p>
+                
+                <div class="equation">
+                    \begin{align}
+                    \alpha = \text{atan2}(y_g - y, x_g - x) - \theta
+                    \end{align}
+                </div>
+                
+                <p>Cette erreur est normalisée dans l'intervalle \([-\pi, \pi]\) pour éviter les discontinuités.</p>
+                
+                <h3>6.3 Algorithme de navigation proportionnelle</h3>
+                
+                <p>L'algorithme de navigation proportionnelle est une approche simple et efficace pour le déplacement jusqu'à un point. Il utilise un contrôleur proportionnel pour ajuster les vitesses linéaire et angulaire du robot en fonction des erreurs de position et d'angle.</p>
+                
+                <h4>6.3.1 Principe</h4>
+                
+                <p>Le principe de l'algorithme est le suivant :</p>
+                <ol>
+                    <li>Calculer l'erreur de position \(\rho\) et l'erreur d'angle \(\alpha\)</li>
+                    <li>Calculer la vitesse linéaire proportionnelle à l'erreur de position : \(v = K_\rho \cdot \rho\)</li>
+                    <li>Calculer la vitesse angulaire proportionnelle à l'erreur d'angle : \(\omega = K_\alpha \cdot \alpha\)</li>
+                    <li>Convertir ces vitesses en vitesses des roues en utilisant le modèle cinématique inverse</li>
+                </ol>
+                
+                <h4>6.3.2 Algorithme</h4>
+                
+                <p>Voici l'algorithme de navigation proportionnelle :</p>
+                
+                <pre><code class="language-python">def navigation_proportionnelle(robot, point_cible, K_rho, K_alpha):
+    # Calculer l'erreur de position
+    dx = point_cible[0] - robot.x
+    dy = point_cible[1] - robot.y
+    rho = math.sqrt(dx**2 + dy**2)
+    
+    # Calculer l'erreur d'angle
+    alpha = math.atan2(dy, dx) - robot.theta
+    alpha = math.atan2(math.sin(alpha), math.cos(alpha))  # Normalisation
+    
+    # Calculer les vitesses linéaire et angulaire
+    v = K_rho * rho
+    omega = K_alpha * alpha
+    
+    # Limiter les vitesses
+    v = min(v, v_max)
+    omega = max(min(omega, omega_max), -omega_max)
+    
+    # Convertir en vitesses des roues
+    v_r, v_l = robot.inverse_kinematics(v, omega)
+    
+    return v_r, v_l
+</code></pre>
+                
+                <h4>6.3.3 Analyse de stabilité</h4>
+                
+                <p>L'algorithme de navigation proportionnelle est stable sous certaines conditions sur les gains \(K_\rho\) et \(K_\alpha\). En particulier, il est prouvé que si \(K_\rho > 0\) et \(K_\alpha > 0\), le robot convergera vers le point cible.</p>
+                
+                <p>Cependant, cet algorithme présente quelques limitations :</p>
+                <ul>
+                    <li>Il peut conduire à des trajectoires non optimales</li>
+                    <li>Il peut osciller autour du point cible si les gains sont mal choisis</li>
+                    <li>Il ne prend pas en compte les obstacles</li>
+                </ul>
+                
+                <h3>6.4 Algorithme de navigation avec évitement d'obstacles</h3>
+                
+                <p>Pour naviguer dans des environnements avec obstacles, on peut étendre l'algorithme de navigation proportionnelle en ajoutant une composante d'évitement d'obstacles.</p>
+                
+                <h4>6.4.1 Champs de potentiel</h4>
+                
+                <p>Une approche courante est d'utiliser des champs de potentiel, où :</p>
+                <ul>
+                    <li>Le point cible génère un potentiel attractif</li>
+                    <li>Les obstacles génèrent des potentiels répulsifs</li>
+                    <li>Le robot se déplace dans la direction du gradient négatif du potentiel total</li>
+                </ul>
+                
+                <p>Le potentiel attractif est généralement défini comme :</p>
+                
+                <div class="equation">
+                    \begin{align}
+                    U_{att}(x, y) = \frac{1}{2} K_{att} \cdot ((x - x_g)^2 + (y - y_g)^2)
+                    \end{align}
+                </div>
+                
+                <p>Le potentiel répulsif pour un obstacle à la position \((x_o, y_o)\) est :</p>
+                
+                <div class="equation">
+                    \begin{align}
+                    U_{rep}(x, y) = 
+                    \begin{cases}
+                    \frac{1}{2} K_{rep} \left(\frac{1}{d} - \frac{1}{d_0}\right)^2 & \text{si } d \leq d_0 \\
+                    0 & \text{si } d > d_0
+                    \end{cases}
+                    \end{align}
+                </div>
+                
+                <p>où \(d = \sqrt{(x - x_o)^2 + (y - y_o)^2}\) est la distance à l'obstacle et \(d_0\) est la distance d'influence de l'obstacle.</p>
+                
+                <h4>6.4.2 Algorithme</h4>
+                
+                <p>Voici l'algorithme de navigation avec évitement d'obstacles basé sur les champs de potentiel :</p>
+                
+                <pre><code class="language-python">def navigation_avec_evitement(robot, point_cible, obstacles, K_att, K_rep, d0):
+    # Calculer le gradient du potentiel attractif
+    dx_att = K_att * (robot.x - point_cible[0])
+    dy_att = K_att * (robot.y - point_cible[1])
+    
+    # Calculer le gradient du potentiel répulsif
+    dx_rep = 0
+    dy_rep = 0
+    
+    for obstacle in obstacles:
+        # Distance à l'obstacle
+        dx_obs = robot.x - obstacle[0]
+        dy_obs = robot.y - obstacle[1]
+        d = math.sqrt(dx_obs**2 + dy_obs**2)
+        
+        # Si l'obstacle est dans la zone d'influence
+        if d <= d0:
+            # Gradient du potentiel répulsif
+            grad_rep = K_rep * (1/d - 1/d0) * (1/d**2)
+            dx_rep += grad_rep * dx_obs / d
+            dy_rep += grad_rep * dy_obs / d
+    
+    # Gradient total
+    dx_total = -dx_att + dx_rep
+    dy_total = -dy_att + dy_rep
+    
+    # Direction désirée
+    theta_des = math.atan2(dy_total, dx_total)
+    
+    # Erreur d'angle
+    alpha = theta_des - robot.theta
+    alpha = math.atan2(math.sin(alpha), math.cos(alpha))  # Normalisation
+    
+    # Magnitude du gradient
+    magnitude = math.sqrt(dx_total**2 + dy_total**2)
+    
+    # Vitesses linéaire et angulaire
+    v = K_rho * magnitude
+    omega = K_alpha * alpha
+    
+    # Limiter les vitesses
+    v = min(v, v_max)
+    omega = max(min(omega, omega_max), -omega_max)
+    
+    # Convertir en vitesses des roues
+    v_r, v_l = robot.inverse_kinematics(v, omega)
+    
+    return v_r, v_l
+</code></pre>
+                
+                <h3>6.5 Algorithme de navigation avec planification de trajectoire</h3>
+                
+                <p>Pour des environnements complexes, il est souvent nécessaire de planifier une trajectoire complète avant de commencer à se déplacer. Plusieurs algorithmes de planification de trajectoire peuvent être utilisés :</p>
+                
+                <h4>6.5.1 Algorithme A*</h4>
+                
+                <p>L'algorithme A* est un algorithme de recherche de chemin qui trouve le chemin le plus court entre deux points dans un graphe. Il utilise une heuristique pour guider la recherche vers le but.</p>
+                
+                <h4>6.5.2 Algorithme RRT (Rapidly-exploring Random Tree)</h4>
+                
+                <p>L'algorithme RRT construit un arbre de configurations aléatoires qui explore rapidement l'espace de configuration. Il est particulièrement adapté aux espaces de grande dimension.</p>
+                
+                <h4>6.5.3 Suivi de trajectoire</h4>
+                
+                <p>Une fois la trajectoire planifiée, le robot doit la suivre. Pour cela, on peut utiliser un contrôleur de suivi de trajectoire, comme le contrôleur de poursuite pure (pure pursuit) ou le contrôleur de Stanley.</p>
+                
+                <h3>6.6 Implémentation en Python</h3>
+                
+                <p>Voici une implémentation complète de l'algorithme de navigation proportionnelle en Python, avec simulation et visualisation :</p>
+                
+                <pre><code class="language-python">import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.patches import Circle
+import math
+
+class RobotUnicycle:
+    def __init__(self, x=0, y=0, theta=0, wheel_radius=0.1, axle_length=0.5):
+        # État du robot
+        self.x = x
+        self.y = y
+        self.theta = theta
+        
+        # Paramètres du robot
+        self.r = wheel_radius  # rayon des roues
+        self.l = axle_length / 2  # demi-distance entre les roues
+        
+        # Historique des positions pour la visualisation
+        self.history_x = [self.x]
+        self.history_y = [self.y]
+    
+    def update_kinematics(self, v_r, v_l, dt):
+        """
+        Met à jour l'état du robot en utilisant le modèle cinématique.
+        
+        Args:
+            v_r (float): Vitesse angulaire de la roue droite (rad/s)
+            v_l (float): Vitesse angulaire de la roue gauche (rad/s)
+            dt (float): Pas de temps (s)
+        """
+        # Calcul des vitesses linéaire et angulaire
+        v = self.r * (v_r + v_l) / 2
+        omega = self.r * (v_r - v_l) / (2 * self.l)
+        
+        # Mise à jour de l'état
+        self.x += v * math.cos(self.theta) * dt
+        self.y += v * math.sin(self.theta) * dt
+        self.theta += omega * dt
+        
+        # Normalisation de l'angle
+        self.theta = math.atan2(math.sin(self.theta), math.cos(self.theta))
+        
+        # Enregistrement de la position pour la visualisation
+        self.history_x.append(self.x)
+        self.history_y.append(self.y)
+    
+    def inverse_kinematics(self, v, omega):
+        """
+        Calcule les vitesses des roues à partir des vitesses linéaire et angulaire.
+        
+        Args:
+            v (float): Vitesse linéaire désirée (m/s)
+            omega (float): Vitesse angulaire désirée (rad/s)
+        
+        Returns:
+            tuple: Vitesses des roues droite et gauche (v_r, v_l)
+        """
+        v_r = (v + self.l * omega) / self.r
+        v_l = (v - self.l * omega) / self.r
+        
+        return v_r, v_l
+    
+    def plot(self, ax):
+        """
+        Affiche le robot sur l'axe donné.
+        
+        Args:
+            ax: Axe matplotlib
+        """
+        # Trajectoire
+        ax.plot(self.history_x, self.history_y, 'b-', alpha=0.7)
+        
+        # Corps du robot
+        robot_circle = Circle((self.x, self.y), 0.2, fill=False, color='blue')
+        ax.add_patch(robot_circle)
+        
+        # Direction
+        direction_x = self.x + 0.3 * math.cos(self.theta)
+        direction_y = self.y + 0.3 * math.sin(self.theta)
+        ax.plot([self.x, direction_x], [self.y, direction_y], 'b-')
+        
+        # Roues
+        left_wheel_x = self.x - self.l * math.sin(self.theta)
+        left_wheel_y = self.y + self.l * math.cos(self.theta)
+        right_wheel_x = self.x + self.l * math.sin(self.theta)
+        right_wheel_y = self.y - self.l * math.cos(self.theta)
+        
+        ax.plot(left_wheel_x, left_wheel_y, 'ro', markersize=5)
+        ax.plot(right_wheel_x, right_wheel_y, 'ro', markersize=5)
+
+def navigation_proportionnelle(robot, point_cible, K_rho, K_alpha, v_max, omega_max):
+    """
+    Algorithme de navigation proportionnelle.
+    
+    Args:
+        robot: Robot unicycle
+        point_cible: Tuple (x, y) du point cible
+        K_rho: Gain proportionnel pour l'erreur de position
+        K_alpha: Gain proportionnel pour l'erreur d'angle
+        v_max: Vitesse linéaire maximale
+        omega_max: Vitesse angulaire maximale
+    
+    Returns:
+        tuple: Vitesses des roues droite et gauche (v_r, v_l)
+    """
+    # Calculer l'erreur de position
+    dx = point_cible[0] - robot.x
+    dy = point_cible[1] - robot.y
+    rho = math.sqrt(dx**2 + dy**2)
+    
+    # Calculer l'erreur d'angle
+    alpha = math.atan2(dy, dx) - robot.theta
+    alpha = math.atan2(math.sin(alpha), math.cos(alpha))  # Normalisation
+    
+    # Calculer les vitesses linéaire et angulaire
+    v = K_rho * rho
+    omega = K_alpha * alpha
+    
+    # Limiter les vitesses
+    v = min(v, v_max)
+    omega = max(min(omega, omega_max), -omega_max)
+    
+    # Convertir en vitesses des roues
+    v_r, v_l = robot.inverse_kinematics(v, omega)
+    
+    return v_r, v_l
+
+# Exemple d'utilisation
+if __name__ == "__main__":
+    # Créer un robot
+    robot = RobotUnicycle(x=-3, y=-2, theta=0, wheel_radius=0.1, axle_length=0.5)
+    
+    # Point cible
+    target = (3, 2)
+    
+    # Paramètres du contrôleur
+    K_rho = 
+(Content truncated due to size limit. Use line ranges to read in chunks)

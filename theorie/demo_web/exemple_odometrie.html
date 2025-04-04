@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exemple d'Odométrie - Robotique Mobile</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/prism.css">
+    <script src="js/prism.js"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Cours Interactif sur la Robotique Mobile</h1>
+            <h2>Exemple d'Odométrie et Calcul de Distance</h2>
+        </header>
+
+        <nav>
+            <ul>
+                <li><a href="index.html">Introduction</a></li>
+                <li><a href="modele_geometrique.html">Modèle géométrique</a></li>
+                <li><a href="exemple_odometrie.html">Odométrie</a></li>
+                <li><a href="modele_cinematique.html">Modèle cinématique</a></li>
+                <li><a href="modele_dynamique.html">Modèle dynamique</a></li>
+                <li><a href="algorithme_deplacement.html">Algorithme de déplacement</a></li>
+                <li><a href="implementation_pid.html">Implémentation PID</a></li>
+                <li><a href="swarm_robotics.html">Swarm Robotics</a></li>
+                <li><a href="exemple_flotte_agv.html">Exemple de flotte d'AGV</a></li>
+                <li><a href="index.html#conclusion">Conclusion</a></li>
+            </ul>
+        </nav>
+
+        <main>
+            <section>
+                <h2>3. Odométrie et calcul de la distance</h2>
+                
+                <p>L'odométrie est une technique fondamentale en robotique mobile qui permet d'estimer la position d'un robot en intégrant les informations de déplacement de ses roues. Cette section présente un exemple concret d'odométrie pour un robot unicycle à deux roues différentielles.</p>
+                
+                <h3>3.1 Principe de l'odométrie</h3>
+                
+                <p>L'odométrie repose sur le principe suivant : en mesurant la rotation des roues du robot, on peut estimer la distance parcourue par chaque roue, puis en utilisant le modèle cinématique du robot, calculer le déplacement du robot dans l'espace.</p>
+                
+                <p>Pour un robot unicycle à deux roues différentielles, les capteurs typiquement utilisés sont des encodeurs rotatifs (ou "encodeurs") fixés sur les axes des roues. Ces encodeurs mesurent l'angle de rotation des roues, généralement en "ticks" ou impulsions.</p>
+                
+                <div class="note">
+                    <p>L'odométrie est sujette à des erreurs cumulatives, car chaque petite erreur de mesure s'accumule au fil du temps. C'est pourquoi elle est souvent complétée par d'autres méthodes de localisation.</p>
+                </div>
+                
+                <h3>3.2 Calcul de la distance parcourue par les roues</h3>
+                
+                <p>Si nous notons \(\Delta \phi_r\) et \(\Delta \phi_l\) les angles de rotation des roues droite et gauche (en radians) pendant un intervalle de temps \(\Delta t\), alors les distances parcourues par chaque roue sont :</p>
+                
+                <div class="equation">
+                    \begin{align}
+                    \Delta s_r &= r \cdot \Delta \phi_r \\
+                    \Delta s_l &= r \cdot \Delta \phi_l
+                    \end{align}
+                </div>
+                
+                <p>où \(r\) est le rayon des roues.</p>
+                
+                <h3>3.3 Calcul du déplacement du robot</h3>
+                
+                <p>À partir des distances parcourues par les roues, nous pouvons calculer le déplacement du robot dans le repère global. Pour cela, nous utilisons les équations suivantes :</p>
+                
+                <div class="equation">
+                    \begin{align}
+                    \Delta s &= \frac{\Delta s_r + \Delta s_l}{2} \\
+                    \Delta \theta &= \frac{\Delta s_r - \Delta s_l}{2l}
+                    \end{align}
+                </div>
+                
+                <p>où \(\Delta s\) est la distance parcourue par le centre du robot, \(\Delta \theta\) est la variation d'orientation du robot, et \(l\) est la demi-distance entre les roues.</p>
+                
+                <p>Ensuite, nous pouvons calculer le déplacement dans le repère global :</p>
+                
+                <div class="equation">
+                    \begin{align}
+                    \Delta x &= \Delta s \cdot \cos(\theta + \frac{\Delta \theta}{2}) \\
+                    \Delta y &= \Delta s \cdot \sin(\theta + \frac{\Delta \theta}{2})
+                    \end{align}
+                </div>
+                
+                <p>où \(\theta\) est l'orientation initiale du robot.</p>
+                
+                <p>Finalement, la nouvelle position et orientation du robot sont :</p>
+                
+                <div class="equation">
+                    \begin{align}
+                    x_{new} &= x + \Delta x \\
+                    y_{new} &= y + \Delta y \\
+                    \theta_{new} &= \theta + \Delta \theta
+                    \end{align}
+                </div>
+                
+                <h3>3.4 Algorithme d'odométrie</h3>
+                
+                <p>Voici l'algorithme complet pour l'odométrie d'un robot unicycle :</p>
+                
+                <ol>
+                    <li>Initialiser la position et l'orientation du robot : \(x = 0\), \(y = 0\), \(\theta = 0\)</li>
+                    <li>À chaque pas de temps \(\Delta t\) :
+                        <ol>
+                            <li>Lire les angles de rotation des roues \(\Delta \phi_r\) et \(\Delta \phi_l\)</li>
+                            <li>Calculer les distances parcourues par les roues : \(\Delta s_r = r \cdot \Delta \phi_r\) et \(\Delta s_l = r \cdot \Delta \phi_l\)</li>
+                            <li>Calculer la distance parcourue par le centre du robot : \(\Delta s = \frac{\Delta s_r + \Delta s_l}{2}\)</li>
+                            <li>Calculer la variation d'orientation : \(\Delta \theta = \frac{\Delta s_r - \Delta s_l}{2l}\)</li>
+                            <li>Calculer le déplacement dans le repère global : \(\Delta x = \Delta s \cdot \cos(\theta + \frac{\Delta \theta}{2})\) et \(\Delta y = \Delta s \cdot \sin(\theta + \frac{\Delta \theta}{2})\)</li>
+                            <li>Mettre à jour la position et l'orientation : \(x = x + \Delta x\), \(y = y + \Delta y\), \(\theta = \theta + \Delta \theta\)</li>
+                        </ol>
+                    </li>
+                </ol>
+                
+                <h3>3.5 Exemples numériques</h3>
+                
+                <p>Considérons un robot avec les paramètres suivants :</p>
+                <ul>
+                    <li>Rayon des roues : \(r = 0.1\) m</li>
+                    <li>Distance entre les roues : \(2l = 0.5\) m (donc \(l = 0.25\) m)</li>
+                    <li>Position initiale : \(x = 0\), \(y = 0\), \(\theta = 0\) (orienté selon l'axe des x)</li>
+                </ul>
+                
+                <h4>Exemple 1 : Ligne droite</h4>
+                
+                <p>Si les deux roues tournent de la même quantité, par exemple \(\Delta \phi_r = \Delta \phi_l = \pi\) radians (un demi-tour), alors :</p>
+                <ul>
+                    <li>\(\Delta s_r = 0.1 \cdot \pi = 0.314\) m</li>
+                    <li>\(\Delta s_l = 0.1 \cdot \pi = 0.314\) m</li>
+                    <li>\(\Delta s = \frac{0.314 + 0.314}{2} = 0.314\) m</li>
+                    <li>\(\Delta \theta = \frac{0.314 - 0.314}{2 \cdot 0.25} = 0\) rad</li>
+                    <li>\(\Delta x = 0.314 \cdot \cos(0 + \frac{0}{2}) = 0.314\) m</li>
+                    <li>\(\Delta y = 0.314 \cdot \sin(0 + \frac{0}{2}) = 0\) m</li>
+                </ul>
+                
+                <p>Donc, le robot s'est déplacé de 0.314 m selon l'axe des x, sans changer d'orientation.</p>
+                
+                <h4>Exemple 2 : Rotation sur place</h4>
+                
+                <p>Si les roues tournent dans des directions opposées avec la même amplitude, par exemple \(\Delta \phi_r = \pi\) et \(\Delta \phi_l = -\pi\) radians, alors :</p>
+                <ul>
+                    <li>\(\Delta s_r = 0.1 \cdot \pi = 0.314\) m</li>
+                    <li>\(\Delta s_l = 0.1 \cdot (-\pi) = -0.314\) m</li>
+                    <li>\(\Delta s = \frac{0.314 + (-0.314)}{2} = 0\) m</li>
+                    <li>\(\Delta \theta = \frac{0.314 - (-0.314)}{2 \cdot 0.25} = \frac{0.628}{0.5} = 1.256\) rad ≈ 72°</li>
+                    <li>\(\Delta x = 0 \cdot \cos(0 + \frac{1.256}{2}) = 0\) m</li>
+                    <li>\(\Delta y = 0 \cdot \sin(0 + \frac{1.256}{2}) = 0\) m</li>
+                </ul>
+                
+                <p>Donc, le robot a tourné sur place d'environ 72° dans le sens anti-horaire.</p>
+                
+                <h4>Exemple 3 : Arc de cercle</h4>
+                
+                <p>Si les roues tournent à des vitesses différentes, par exemple \(\Delta \phi_r = 2\pi\) et \(\Delta \phi_l = \pi\) radians, alors :</p>
+                <ul>
+                    <li>\(\Delta s_r = 0.1 \cdot 2\pi = 0.628\) m</li>
+                    <li>\(\Delta s_l = 0.1 \cdot \pi = 0.314\) m</li>
+                    <li>\(\Delta s = \frac{0.628 + 0.314}{2} = 0.471\) m</li>
+                    <li>\(\Delta \theta = \frac{0.628 - 0.314}{2 \cdot 0.25} = \frac{0.314}{0.5} = 0.628\) rad ≈ 36°</li>
+                    <li>\(\Delta x = 0.471 \cdot \cos(0 + \frac{0.628}{2}) = 0.471 \cdot \cos(0.314) = 0.471 \cdot 0.951 = 0.448\) m</li>
+                    <li>\(\Delta y = 0.471 \cdot \sin(0 + \frac{0.628}{2}) = 0.471 \cdot \sin(0.314) = 0.471 \cdot 0.309 = 0.146\) m</li>
+                </ul>
+                
+                <p>Donc, le robot s'est déplacé de 0.448 m selon l'axe des x et de 0.146 m selon l'axe des y, tout en tournant de 36° dans le sens anti-horaire.</p>
+                
+                <h3>3.6 Implémentation en Python</h3>
+                
+                <p>Voici une implémentation de l'odométrie en Python, avec visualisation de la trajectoire :</p>
+                
+                <pre><code class="language-python">import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.patches import Circle
+import math
+
+class RobotOdometry:
+    def __init__(self, wheel_radius=0.1, axle_length=0.5):
+        # Position et orientation initiales
+        self.x = 0.0
+        self.y = 0.0
+        self.theta = 0.0
+        
+        # Paramètres du robot
+        self.r = wheel_radius  # rayon des roues
+        self.l = axle_length / 2  # demi-distance entre les roues
+        
+        # Historique des positions pour la visualisation
+        self.history_x = [self.x]
+        self.history_y = [self.y]
+    
+    def update_odometry(self, delta_phi_r, delta_phi_l):
+        """
+        Met à jour la position du robot en utilisant l'odométrie.
+        
+        Args:
+            delta_phi_r (float): Angle de rotation de la roue droite (rad)
+            delta_phi_l (float): Angle de rotation de la roue gauche (rad)
+        """
+        # Calcul des distances parcourues par les roues
+        delta_s_r = self.r * delta_phi_r
+        delta_s_l = self.r * delta_phi_l
+        
+        # Calcul de la distance parcourue par le centre du robot
+        delta_s = (delta_s_r + delta_s_l) / 2
+        
+        # Calcul de la variation d'orientation
+        delta_theta = (delta_s_r - delta_s_l) / (2 * self.l)
+        
+        # Calcul du déplacement dans le repère global
+        delta_x = delta_s * math.cos(self.theta + delta_theta / 2)
+        delta_y = delta_s * math.sin(self.theta + delta_theta / 2)
+        
+        # Mise à jour de la position et de l'orientation
+        self.x += delta_x
+        self.y += delta_y
+        self.theta += delta_theta
+        
+        # Normalisation de l'angle
+        self.theta = math.atan2(math.sin(self.theta), math.cos(self.theta))
+        
+        # Enregistrement de la position pour la visualisation
+        self.history_x.append(self.x)
+        self.history_y.append(self.y)
+        
+        return delta_x, delta_y, delta_theta
+    
+    def plot(self, ax):
+        """
+        Affiche le robot et sa trajectoire sur l'axe donné.
+        
+        Args:
+            ax: Axe matplotlib
+        """
+        # Trajectoire
+        ax.plot(self.history_x, self.history_y, 'b-', alpha=0.7)
+        
+        # Position actuelle
+        robot_circle = Circle((self.x, self.y), 0.2, fill=False, color='blue')
+        ax.add_patch(robot_circle)
+        
+        # Direction
+        direction_x = self.x + 0.3 * math.cos(self.theta)
+        direction_y = self.y + 0.3 * math.sin(self.theta)
+        ax.plot([self.x, direction_x], [self.y, direction_y], 'b-')
+        
+        # Roues
+        left_wheel_x = self.x - self.l * math.sin(self.theta)
+        left_wheel_y = self.y + self.l * math.cos(self.theta)
+        right_wheel_x = self.x + self.l * math.sin(self.theta)
+        right_wheel_y = self.y - self.l * math.cos(self.theta)
+        
+        ax.plot(left_wheel_x, left_wheel_y, 'ro', markersize=5)
+        ax.plot(right_wheel_x, right_wheel_y, 'ro', markersize=5)
+
+# Exemple d'utilisation
+if __name__ == "__main__":
+    # Créer un robot
+    robot = RobotOdometry(wheel_radius=0.1, axle_length=0.5)
+    
+    # Créer une figure
+    fig, ax = plt.subplots(figsize=(10, 10))
+    
+    # Définir une séquence de mouvements
+    movements = [
+        # (delta_phi_r, delta_phi_l, description)
+        (np.pi, np.pi, "Ligne droite"),
+        (np.pi, -np.pi, "Rotation sur place"),
+        (2*np.pi, np.pi, "Arc de cercle"),
+        (np.pi/2, np.pi/2, "Ligne droite"),
+        (np.pi/2, np.pi/4, "Virage léger"),
+        (np.pi/4, np.pi/2, "Virage léger dans l'autre sens")
+    ]
+    
+    # Appliquer les mouvements et afficher les résultats
+    for i, (delta_phi_r, delta_phi_l, desc) in enumerate(movements):
+        print(f"\nMouvement {i+1}: {desc}")
+        print(f"Rotation roue droite: {delta_phi_r:.2f} rad, Rotation roue gauche: {delta_phi_l:.2f} rad")
+        
+        delta_x, delta_y, delta_theta = robot.update_odometry(delta_phi_r, delta_phi_l)
+        
+        print(f"Déplacement: dx={delta_x:.3f}m, dy={delta_y:.3f}m, dtheta={delta_theta:.3f}rad")
+        print(f"Nouvelle position: x={robot.x:.3f}m, y={robot.y:.3f}m, theta={robot.theta:.3f}rad")
+    
+    # Afficher le robot et sa trajectoire
+    robot.plot(ax)
+    
+    # Configurer les axes
+    ax.set_xlim(-2, 2)
+    ax.set_ylim(-2, 2)
+    ax.set_aspect('equal')
+    ax.grid(True)
+    ax.set_xlabel('X (m)')
+    ax.set_ylabel('Y (m)')
+    ax.set_title('Odométrie du robot unicycle')
+    
+    plt.show()
+</code></pre>
+                
+                <p>Cette implémentation permet de simuler le déplacement d'un robot unicycle en utilisant l'odométrie et de visualiser sa trajectoire.</p>
+                
+                <h3>3.7 Sources d'erreur en odométrie</h3>
+                
+                <p>L'odométrie est sujette à plusieurs sources d'erreur qui peuvent affecter la précision de l'estimation de position :</p>
+                
+                <h4>Erreurs systématiques</h4>
+                <ul>
+                    <li><strong>Diamètre inégal des roues</strong> : Si les roues n'ont pas exactement le même diamètre, cela introduit une erreur systématique dans l'estimation de l'orientation.</li>
+                    <li><strong>Désalignement des roues</strong> : Si les roues ne sont pas parfaitement alignées, le robot peut dévier de sa trajectoire prévue.</li>
+                    <li><strong>Incertitude sur les paramètres</strong> : Des erreurs dans la mesure du rayon des roues ou de la distance entre les roues peuvent affecter les calculs.</li>
+                </ul>
+                
+                <h4>Erreurs non systématiques</h4>
+                <ul>
+
+(Content truncated due to size limit. Use line ranges to read in chunks)

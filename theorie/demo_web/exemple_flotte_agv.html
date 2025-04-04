@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exemple de Flotte AGV</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1, h2, h3 {
+            color: #333;
+        }
+        p {
+            margin: 10px 0;
+        }
+        canvas {
+            display: block;
+            background: #ddd;
+            margin: 20px auto;
+            border: 2px solid #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Exemple de Flotte AGV</h1>
+        <h2>Introduction</h2>
+        <p>Les AGV (Automated Guided Vehicles) sont des robots mobiles autonomes utilisés pour le transport de marchandises dans divers environnements industriels.</p>
+        
+        <h2>Technologies Utilisées</h2>
+        <p>Les AGV modernes utilisent des capteurs avancés, la vision par ordinateur et l'intelligence artificielle pour naviguer de manière autonome.</p>
+        
+        <h2>Applications</h2>
+        <p>Ils sont utilisés dans les entrepôts logistiques, les usines de fabrication et les centres de distribution pour optimiser les flux de travail et réduire les coûts.</p>
+        
+        <h2>Simulation</h2>
+        <canvas id="simulation" width="600" height="400"></canvas>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('simulation');
+        const ctx = canvas.getContext('2d');
+        
+        const robots = [
+            { x: 50, y: 50, dx: 2, dy: 2 },
+            { x: 200, y: 150, dx: -2, dy: 2 },
+            { x: 350, y: 250, dx: 2, dy: -2 },
+            { x: 500, y: 300, dx: -2, dy: -2 }
+        ];
+        const radius = 10;
+        
+        function drawRobots() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            robots.forEach(robot => {
+                ctx.beginPath();
+                ctx.arc(robot.x, robot.y, radius, 0, Math.PI * 2);
+                ctx.fillStyle = 'blue';
+                ctx.fill();
+                ctx.closePath();
+            });
+        }
+        
+        function updatePositions() {
+            for (let i = 0; i < robots.length; i++) {
+                robots[i].x += robots[i].dx;
+                robots[i].y += robots[i].dy;
+                
+                if (robots[i].x - radius <= 0 || robots[i].x + radius >= canvas.width) {
+                    robots[i].dx *= -1;
+                }
+                if (robots[i].y - radius <= 0 || robots[i].y + radius >= canvas.height) {
+                    robots[i].dy *= -1;
+                }
+                
+                for (let j = i + 1; j < robots.length; j++) {
+                    const dx = robots[i].x - robots[j].x;
+                    const dy = robots[i].y - robots[j].y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    if (distance < radius * 4) { //*2 to change direction on touch, *4 to change direction before they collide !
+                        robots[i].dx *= -1;
+                        robots[i].dy *= -1;
+                        robots[j].dx *= -1;
+                        robots[j].dy *= -1;
+                    }
+                }
+            }
+        }
+        
+        function animate() {
+            updatePositions();
+            drawRobots();
+            requestAnimationFrame(animate);
+        }
+        
+        animate();
+    </script>
+</body>
+</html>
