@@ -1,0 +1,61 @@
+#VRML_SIM R2025a utf8
+
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/backgrounds/protos/TexturedBackground.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/backgrounds/protos/TexturedBackgroundLight.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/floors/protos/RectangleArena.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/robots/gctronic/e-puck/protos/E-puck.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/robots/gctronic/e-puck/protos/E-puckGroundSensors.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/factory/pallet/protos/WoodenPallet.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/factory/containers/protos/WoodenBox.proto"
+
+WorldInfo {
+}
+Viewpoint {
+  orientation -0.10490328598477767 -0.003725669545057489 0.9944754496597876 3.560976243827197
+  position 1.5785932969126408 0.4024106701996435 0.3987341482410362
+  follow "e-puck"
+}
+TexturedBackground {
+}
+TexturedBackgroundLight {
+}
+RectangleArena {
+  rotation 0 0 1 -1.5707953071795862
+  floorSize 1.2 1.8
+  floorTileSize 1.2 1.8
+  floorAppearance PBRAppearance {
+    baseColorMap ImageTexture {
+      url [
+        "oval_line.png"
+      ]
+    }
+    roughness 1
+    metalness 0
+  }
+}
+WoodenPallet {
+  translation 0.619466 -0.287878 0
+  rotation 0 0 1 2.0944
+  size 0.2 0.08 0.014
+}
+WoodenPallet {
+  translation 0.433559 -0.413038 0
+  name "wooden pallet(1)"
+  size 0.2 0.08 0.014
+}
+DEF E_PUCK E-puck {
+  translation -0.17150377892922064 -0.4264527596007353 -6.956752660718102e-05
+  rotation -1.4197346613635798e-05 0.008617057944477681 -0.9999628723661778 0.016871207419574017
+  controller "epuck_follow_line"
+  window "botstudio"
+  camera_width 40
+  camera_height 1
+  groundSensorsSlot [
+    E-puckGroundSensors {
+    }
+  ]
+}
+WoodenBox {
+  translation 0.0495764 -0.421491 0.025
+  size 0.05 0.05 0.05
+}
