@@ -41,7 +41,7 @@ current_state = states[0]  # Initialize the current state to line_following
 LINE_THRESHOLD = 350  # adjust this value based on your sensor readings
 
 # Define a variable to switch the sensor logic
-INVERT_SENSOR_LOGIC = True  # Set to True to detect line as lower than threshold
+INVERT_SENSOR_LOGIC = False  # Set to True to detect line as lower than threshold
 
 # Define the motor velocities
 VELOCITY_FORWARD = 0.5 * MAX_SPEED
@@ -52,13 +52,7 @@ rightSpeed = 0
 
 # Define a counter to track the number of cycles without seeing the line
 lost_line_counter = 0
-OBSTACLE_THRESHOLD = 120  # Adjust based on your environment
-# Add these initializations with your other variables at the beginning of your program
-search_counter = 0
-backup_counter = 0
-forward_counter = 0
-rotate_counter = 0
-recovery_direction = 'search'  # Default recovery direction
+OBSTACLE_THRESHOLD = 80  # Adjust based on your environment
 
 #-------------------------------------------------------
 # Initialize devices
@@ -108,10 +102,6 @@ while robot.step(timestep) != -1:
     for i in range(2):
         encoderValues.append(encoder[i].getValue())    # [rad]
 
-    
-
-    print('Counter: ' + str(counter) + '. Current state: ' + current_state + '\nline values' + str(gsValues) + '\nobstacle values' + str(psValues))
-
     # Check for obstacles first (higher priority)
     front_obstacle = psValues[0] > OBSTACLE_THRESHOLD or psValues[7] > OBSTACLE_THRESHOLD
     left_obstacle = psValues[5] > OBSTACLE_THRESHOLD or psValues[6] > OBSTACLE_THRESHOLD
@@ -150,133 +140,56 @@ while robot.step(timestep) != -1:
                 counter = 0
 
     if current_state == 'line_following':
-        if gsValues[0] < LINE_THRESHOLD and gsValues[2] < LINE_THRESHOLD:
+        if (gsValues[0] > LINE_THRESHOLD and gsValues[2] > LINE_THRESHOLD) == INVERT_SENSOR_LOGIC:
             # both sensors see the line, move forward
             leftSpeed = VELOCITY_FORWARD
             rightSpeed = VELOCITY_FORWARD
             lost_line_counter = 0  # reset the counter
         elif (gsValues[0] > LINE_THRESHOLD) == INVERT_SENSOR_LOGIC:
             # left sensor sees the line, turn right
-            leftSpeed = 0.8 * MAX_SPEED
-            rightSpeed = 0.2 * MAX_SPEED
-            turn_counter = 0  # reset turn counter when starting a turn
             current_state = 'turning_right'
         elif (gsValues[2] > LINE_THRESHOLD) == INVERT_SENSOR_LOGIC:
             # right sensor sees the line, turn left
-            leftSpeed = 0.2 * MAX_SPEED
-            rightSpeed = 0.8 * MAX_SPEED
-            turn_counter = 0  # reset turn counter when starting a turn
             current_state = 'turning_left'
         else:
             # both sensors lost the line, increment the counter
             lost_line_counter += 1
-            if lost_line_counter > 2:  # adjust this value to suit your needs
-                # both sensors lost the line for too long, start recovery
+            if lost_line_counter > 5:  # adjust this value to suit your needs
+                # both sensors lost the line for too long, stop
                 current_state = 'lost_line'
-                recovery_direction = 'search'  # Start with a search pattern
 
     elif current_state == 'turning_right':
-        # turn right
+        # turn right with a slower speed on the right wheel
         leftSpeed = 0.8 * MAX_SPEED
-        rightSpeed = 0.1 * MAX_SPEED
-        
-        # Increment turn counter to prevent getting stuck in turning state
-        turn_counter += 1
-        
-        # Check if both sensors see the line (back on track)
-        if gsValues[0] < LINE_THRESHOLD and gsValues[2] < LINE_THRESHOLD:
-            current_state = 'line_following'
-        # Check if right sensor sees the line (completing the turn)
-        elif (gsValues[2] > LINE_THRESHOLD) == INVERT_SENSOR_LOGIC:
-            current_state = 'line_following'
-        # Force return to line following after a certain time to prevent getting stuck
-        elif turn_counter > 50:  # Adjust this threshold based on your robot's speed
-            current_state = 'line_following'
+        rightSpeed = 0.4 * MAX_SPEED
+
+        # check if the right sensor sees the line
+        if (gsValues[2] > LINE_THRESHOLD) == INVERT_SENSOR_LOGIC:
+            # right sensor sees the line, adjust speed to follow curve
+            leftSpeed = 0.6 * MAX_SPEED
+            rightSpeed = 0.8 * MAX_SPEED
 
     elif current_state == 'turning_left':
-        # turn left
-        leftSpeed = 0.1 * MAX_SPEED
+        # turn left with a slower speed on the left wheel
+        leftSpeed = 0.4 * MAX_SPEED
         rightSpeed = 0.8 * MAX_SPEED
-        
-        # Increment turn counter to prevent getting stuck in turning state
-        turn_counter += 1
-        
-        # Check if both sensors see the line (back on track)
-        if gsValues[0] < LINE_THRESHOLD and gsValues[2] < LINE_THRESHOLD:
-            current_state = 'line_following'
-        # Check if left sensor sees the line (completing the turn)
-        elif (gsValues[0] > LINE_THRESHOLD) == INVERT_SENSOR_LOGIC:
-            current_state = 'line_following'
-        # Force return to line following after a certain time to prevent getting stuck
-        elif turn_counter > 50:  # Adjust this threshold based on your robot's speed
-            current_state = 'line_following'
+
+        # check if the left sensor sees the line
+        if (gsValues[0] > LINE_THRESHOLD) == INVERT_SENSOR_LOGIC:
+            # left sensor sees the line, adjust speed to follow curve
+            leftSpeed = 0.8 * MAX_SPEED
+            rightSpeed = 0.6 * MAX_SPEED
 
     elif current_state == 'lost_line':
-        # Implement a more sophisticated recovery strategy
-        if recovery_direction == 'search':
-            # First try rotating in place to find the line
-            leftSpeed = 0.5 * MAX_SPEED
-            rightSpeed = -0.5 * MAX_SPEED
-            search_counter += 1
-            
-            # Check if either sensor detects the line
-            if ((gsValues[0] > LINE_THRESHOLD) == INVERT_SENSOR_LOGIC or 
-                (gsValues[2] > LINE_THRESHOLD) == INVERT_SENSOR_LOGIC):
-                # Line found, go back to line following
-                current_state = 'line_following'
-                
-            # If we've been searching for too long, try backing up
-            elif search_counter > 100:  # Adjust based on robot speed
-                recovery_direction = 'backup'
-                backup_counter = 0
-                
-        elif recovery_direction == 'backup':
-            # Back up a bit to try to find the line
-            leftSpeed = -0.3 * MAX_SPEED
-            rightSpeed = -0.3 * MAX_SPEED
-            backup_counter += 1
-            
-            # Check if we found the line while backing up
-            if ((gsValues[0] > LINE_THRESHOLD) == INVERT_SENSOR_LOGIC or 
-                (gsValues[2] > LINE_THRESHOLD) == INVERT_SENSOR_LOGIC):
-                current_state = 'line_following'
-                
-            # If backing up doesn't work, try going forward
-            elif backup_counter > 50:  # Adjust based on robot speed
-                recovery_direction = 'forward'
-                forward_counter = 0
-                
-        elif recovery_direction == 'forward':
-            # Go forward a bit to try to find the line
-            leftSpeed = 0.3 * MAX_SPEED
-            rightSpeed = 0.3 * MAX_SPEED
-            forward_counter += 1
-            
-            # Check if we found the line
-            if ((gsValues[0] > LINE_THRESHOLD) == INVERT_SENSOR_LOGIC or 
-                (gsValues[2] > LINE_THRESHOLD) == INVERT_SENSOR_LOGIC):
-                current_state = 'line_following'
-                
-            # If going forward doesn't work, try a 180° turn (might be at end of line)
-            elif forward_counter > 50:  # Adjust based on robot speed
-                recovery_direction = 'rotate180'
-                rotate_counter = 0
-                
-        elif recovery_direction == 'rotate180':
-            # Do a 180° turn to find the line in the opposite direction
-            leftSpeed = 0.5 * MAX_SPEED
-            rightSpeed = -0.5 * MAX_SPEED
-            rotate_counter += 1
-            
-            # Check if we found the line during rotation
-            if ((gsValues[0] > LINE_THRESHOLD) == INVERT_SENSOR_LOGIC or 
-                (gsValues[2] > LINE_THRESHOLD) == INVERT_SENSOR_LOGIC):
-                current_state = 'line_following'
-                
-            # After completing approximately 180°, go back to searching
-            elif rotate_counter > 150:  # Adjust for your robot's turning speed
-                recovery_direction = 'search'
-                search_counter = 0
+        # stop the robot
+        leftSpeed = 0
+        rightSpeed = 0
+        # wait for a short period of time before trying to recover
+        counter += 1
+        if counter > COUNTER_MAX:
+            # try to recover by turning left and right
+            current_state = 'turning_left'
+            counter = 0
 
     # Set motor speeds
     leftMotor.setVelocity(leftSpeed)
@@ -289,10 +202,13 @@ while robot.step(timestep) != -1:
     x, y, phi = get_robot_pose(u, w, x_old, y_old, phi_old, timestep/1000)
 
     # Print the current state
-    # print(f"Estimated position (x, y, phi): ({x:.3f}, {y:.3f}, {phi:.3f})" + f"speed (u, w): ({u:.3f}, {w:.3f})")
+    print(f"Estimated position (x, y, phi): ({x:.3f}, {y:.3f}, {phi:.3f})" + f"speed (u, w): ({u:.3f}, {w:.3f})")
     # Update the old encoder values for the next iteration
     oldEncoderValues = encoderValues
     x_old = x
     y_old = y
     phi_old = phi
 
+
+
+    # print('Counter: ' + str(counter) + '. Current state: ' + current_state + 'sensor values' + str(gsValues) + str(psValues))

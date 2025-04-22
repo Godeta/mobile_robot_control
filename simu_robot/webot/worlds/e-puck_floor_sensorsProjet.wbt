@@ -1,0 +1,107 @@
+#VRML_SIM R2025a utf8
+
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/backgrounds/protos/TexturedBackground.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/backgrounds/protos/TexturedBackgroundLight.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/floors/protos/RectangleArena.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/robots/gctronic/e-puck/protos/E-puck.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/robots/gctronic/e-puck/protos/E-puckGroundSensors.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/factory/pallet/protos/WoodenPallet.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/factory/containers/protos/WoodenBox.proto"
+
+WorldInfo {
+}
+Viewpoint {
+  orientation -0.42714376038336843 0.409272512548275 0.806253197474576 1.907040362456082
+  position -0.5886431094721478 -1.3395915249225707 1.6166911745433719
+  follow "e-puck"
+}
+TexturedBackground {
+}
+TexturedBackgroundLight {
+}
+RectangleArena {
+  rotation 0 0 1 -1.5707953071795862
+  floorSize 1.2 1.8
+  floorTileSize 1.2 1.8
+  floorAppearance PBRAppearance {
+    baseColorMap ImageTexture {
+      url [
+        "mondeProjet.png"
+      ]
+    }
+    roughness 1
+    metalness 0
+  }
+}
+WoodenPallet {
+  translation 0.21837 -0.47632 0
+  rotation 0 0 -1 -1.5708053071795867
+  size 0.2 0.08 0.014
+}
+WoodenPallet {
+  translation -0.153014 -0.499199 0
+  name "wooden pallet(1)"
+  size 0.2 0.08 0.014
+}
+DEF E_PUCK E-puck {
+  translation -0.33257 -0.076755 -6.41e-05
+  rotation 0 0 1 -3.1415853071795863
+  controller "epuck_follow_predefined"
+  controllerArgs [
+    "1"
+  ]
+  window "botstudio"
+  camera_width 40
+  camera_height 1
+  turretSlot [
+    InertialUnit {
+    }
+    GPS {
+    }
+  ]
+  groundSensorsSlot [
+    E-puckGroundSensors {
+    }
+  ]
+}
+DEF E_PUCK E-puck {
+  translation -0.335179 -0.285499 0
+  rotation 0 0 1 7.33682e-06
+  name "e-puck(1)"
+  controller "epuck_follow_predefined"
+  controllerArgs [
+    "0"
+  ]
+  window "botstudio"
+  camera_width 40
+  camera_height 1
+  turretSlot [
+    InertialUnit {
+    }
+    GPS {
+    }
+  ]
+  groundSensorsSlot [
+    E-puckGroundSensors {
+    }
+  ]
+}
+WoodenBox {
+  translation -0.190586 -0.0510574 0.025
+  size 0.05 0.05 0.05
+}
+WoodenBox {
+  translation -0.760552 -0.0735722 0.025
+  name "wooden box(1)"
+  size 0.05 0.05 0.05
+}
+WoodenBox {
+  translation -0.664531 -0.0687319 0.025
+  name "wooden box(2)"
+  size 0.05 0.05 0.05
+}
+WoodenBox {
+  translation -0.566935 -0.0645073 0.025
+  name "wooden box(3)"
+  size 0.05 0.05 0.05
+}

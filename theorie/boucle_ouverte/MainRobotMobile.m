@@ -1,7 +1,9 @@
+%Simuler la trajectoire d’un robot mobile dans un plan 2D, piloté par des
+%vitesses linéaire et angulaire, pour qu’il suive une trajectoire de référence.
 clear all;clc;close all;
 %%-------------------------------------------------------------------------
 his.dt=[];dt=0.05;t = 0:dt:30;
-x=0;y=0;theta=1.1071;% position initial du robot
+x=0;y=0;theta=1.1071;% position initiale du robot, angle = atan2(dyr,dxr) = atan2((4*pi*cos(0))/15, (2*pi*cos(0))/15)
 X=[x,y,theta];
 
 Vref=0;        % vitesse lineaire m/s a t=0 
@@ -12,7 +14,7 @@ x_des=2*sin(((2*pi)/30)*t);
 y_des=2*sin(((4*pi)/30)*t);
 % --------------------variables a tracer à la fin--------------------------
 his.X=[];his.theta=[];his.Vref=[];his.Omegaref=[];his.thetar=[];
-% -----------------figure contirnt toutes les variables
+% -----------------figure contient toutes les variables
 f3=figure;
 f3.Position = [50 75 1450 700];
 subplot(5,3,[1,14]),
@@ -62,7 +64,7 @@ for i=1:length(x_des)
   Ref_vitesse=CalculeVitesseRobot(tt);
   Vref=Ref_vitesse(1); 
   Omegaref=Ref_vitesse(2);
-    % Simulation numérique du robot( integration numériqe) 
+    % Simulation numérique du robot( integration numérique) 
     X=Mouve_Robot(X,[Vref,Omegaref],dt);
     % --------------------Fin
    % ----- Enregistrement de données  sous forme de vecteurs
@@ -70,15 +72,15 @@ for i=1:length(x_des)
     his.X=[his.X X];
     his.theta=[his.theta theta]; % l'angle theta
     his.Vref=[his.Vref Vref];% la commande V (vitesse lineaire)
-    his.Omegaref=[his.Omegaref Omegaref]; %la commande V (vitesse angulaire)
+    his.Omegaref=[his.Omegaref Omegaref]; %la commande W (vitesse angulaire)
   
 % tracer line du robot
    
     set(PLOT.RefTrajectory,'XData',x_des(1:i),'YData',y_des(1:i));
     set(PLOT.Robot,'XData',his.X(1,:),'YData',his.X(2,:))
     
-    A.Rot = [ cos(X(3)) -sin(X(3)); sin(X(3)) cos(X(3))]*A.P; %rotated car
-    A.Prot_trasl = A.Rot + [ ones(1,4)*X(1); ones(1,4)*X(2)]; % add offset of car's center
+    A.Rot = [ cos(X(3)) -sin(X(3)); sin(X(3)) cos(X(3))]*A.P; %rotation
+    A.Prot_trasl = A.Rot + [ ones(1,4)*X(1); ones(1,4)*X(2)]; % ajout d'un offset pour le centre du robot
     A.P_robot.XData=A.Prot_trasl(1,:)';
     A.P_robot.YData=A.Prot_trasl(2,:)';
     drawnow  

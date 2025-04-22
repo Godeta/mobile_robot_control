@@ -22,7 +22,7 @@ class EPuck2:
         # Robot Constants
         self.wheel_radius = 20.5  # mm
         self.axle_length = 52  # mm
-        self.max_speed = 0.25  # m/s
+        self.max_speed = 0.75  # m/s
         self.max_rotation = 6.28  # rad/s
         
         # Tkinter scaling factor (1m = 100 pixels for visualization)
