@@ -38,7 +38,7 @@ yr=[-1,-1,1,1];
 %xr = t / max(t);       % ligne droite normalisée de 0 à 1
 %yr = 0.5 * sin(xr * pi); % courbe en S
 
-%trajectoire
+%trajectoire papillon
 %xr = 2*sin(((2*pi)/30)*t);
 %yr = 2*sin(((4*pi)/30)*t);
 

@@ -1,4 +1,5 @@
 from controller import Robot, Supervisor, Motor, RangeFinder, Keyboard
+import math
 
 # Constants
 WHEEL_RADIUS = 0.0625
@@ -14,58 +15,34 @@ PIPE_DOWN_POSITION = 0.0  # Minimum height position for the pipe
 PIPE_MOVEMENT_SPEED = 0.05  # Speed at which the pipe moves
 
 def main():
-    # Create a table to store all the translation fields
-    translation_fields = {}
-    rotation_fields = {}
-    
     # Initialize the robot
     robot = Supervisor()
-    devant = robot.getFromDef('devant') #mir / bodyslot / devant
-    translation_fields['devant'] = devant.getField('translation')
-    rotation_fields['devant'] = devant.getField('rotation')
     
-    devant2 = robot.getFromDef('devant2') 
-    translation_fields['devant2'] = devant2.getField('translation')
-    rotation_fields['devant2'] = devant2.getField('rotation')
-    
-    palette = robot.getFromDef('palettePrise') 
-    translation_fields['palette'] = palette.getField('translation')
-    rotation_fields['palette'] = palette.getField('rotation')
-
-    print("Fields initialized:")
-    for name, field in translation_fields.items():
-        print(f"{name} translation: {field.getSFVec3f()}")
-    for name, field in rotation_fields.items():
-        print(f"{name} rotation: {field.getSFRotation()}")
-    
-    # Get robot and palette position
+    # Get references to nodes
+    palette_node = robot.getFromDef('palettePrise')
+    carton_node = robot.getFromDef('cartonPrise')
     robot_node = robot.getSelf()
+    
+    # Check if all nodes are valid
+    if not palette_node or not robot_node:
+        print("Error: Could not find all required nodes")
+        return
+    
+    # Get fields for robot and palette
+    palette_translation_field = palette_node.getField('translation')
+    palette_rotation_field = palette_node.getField('rotation')
+    carton_translation_field = carton_node.getField('translation')
+    carton_rotation_field = carton_node.getField('rotation')
     robot_translation_field = robot_node.getField('translation')
     robot_rotation_field = robot_node.getField('rotation')
-    
-    # Get initial positions and rotations
-    palette_initial_position = translation_fields['palette'].getSFVec3f()
-    robot_initial_position = robot_translation_field.getSFVec3f()
-    
-    palette_initial_rotation = rotation_fields['palette'].getSFRotation()
-    robot_initial_rotation = robot_rotation_field.getSFRotation()
-    
-    # Calculate the relative offset between palette and robot
-    palette_offset = [
-        palette_initial_position[0] - robot_initial_position[0],
-        palette_initial_position[1] - robot_initial_position[1],
-        palette_initial_position[2] - robot_initial_position[2]
-    ]
-    
-    # Calculate rotation difference (simplified - assuming main rotation is around y-axis)
-    # This stores the initial relative rotation
-    # Store robot and palette rotation in their entirety
-    palette_rotation_offset = palette_initial_rotation.copy()
-    robot_initial_rotation_copy = robot_initial_rotation.copy()
     
     # Track if the palette is raised and should follow the robot
     palette_raised = False
     
+    # Variables to store the relative position and orientation
+    palette_offset = [0, 0, 0]
+    
+    # Get time step
     time_step = int(robot.getBasicTimeStep())
     
     # Get motor devices
@@ -95,8 +72,8 @@ def main():
     print("  vx   : ↑/↓")
     print("  ω    : ←/→")
     print("  Reset: Space bar")
-    print("  Raise Palette and Follow: A (toggle on)")
-    print("  Lower Palette and Stop Following: E (toggle off)")
+    print("  Raise Palette and Follow Robot: A")
+    print("  Lower Palette and Stop Following: E")
     
     # Main control loop
     while robot.step(time_step) != -1:
@@ -118,63 +95,114 @@ def main():
         elif key == ord(' '):
             target_speed = 0
             target_omega = 0
-        # Raise palette and enable following when 'A' is pressed
+        # Raise palette and start following when 'A' is pressed
         elif key == ord('A'):
-            print("Raising palette and enabling following...")
-            palette_translation = translation_fields['palette'].getSFVec3f()
-            # Move up by 0.05 units
-            palette_translation[2] += 0.05
-            translation_fields['palette'].setSFVec3f(palette_translation)
-            palette_raised = True
-            print(f"Palette raised: {palette_translation}")
+            try:
+                print("Raising palette and enabling following...")
+                
+                # First raise the palette a bit
+                current_pos = palette_translation_field.getSFVec3f()
+                new_pos = [current_pos[0], current_pos[1], current_pos[2] + 0.05]
+                palette_translation_field.setSFVec3f(new_pos)
+                current_pos2 = carton_translation_field.getSFVec3f()
+                new_pos = [current_pos2[0], current_pos2[1], current_pos2[2] + 0.05]
+                carton_translation_field.setSFVec3f(new_pos)
+                
+                # Calculate the offset between palette and robot at this moment
+                robot_pos = robot_translation_field.getSFVec3f()
+                palette_pos = palette_translation_field.getSFVec3f()
+                carton_pos = carton_translation_field.getSFVec3f()
+                
+                # Transform to robot's local coordinates
+                robot_rot = robot_rotation_field.getSFRotation()
+                # angle = robot_rot[3]  # Assuming rotation around Y-axis
+                
+                # Calculate relative position in robot's local space
+                dx = palette_pos[0] - robot_pos[0]
+                dy = palette_pos[1] - robot_pos[1]
+                dz = palette_pos[2] - robot_pos[2]
+                
+                # Store the offset in robot's local space
+                palette_offset = [dx, dy, dz]
+                
+                dx = carton_pos[0] - robot_pos[0]
+                dy = carton_pos[1] - robot_pos[1]
+                dz = carton_pos[2] - robot_pos[2]
+                carton_offset = [dx, dy, dz]
+                
+                palette_raised = True
+                print(f"Palette raised and following enabled. Offset: {palette_offset}")
+            except Exception as e:
+                print(f"Error raising palette: {e}")
             
-            # Recalculate both position and rotation offsets
-            palette_initial_position = translation_fields['palette'].getSFVec3f()
-            robot_initial_position = robot_translation_field.getSFVec3f()
-            
-            palette_initial_rotation = rotation_fields['palette'].getSFRotation()
-            robot_initial_rotation = robot_rotation_field.getSFRotation()
-            
-            palette_offset = [
-                palette_initial_position[0] - robot_initial_position[0],
-                palette_initial_position[1] - robot_initial_position[1],
-                palette_initial_position[2] - robot_initial_position[2]
-            ]
-            
-            # Store robot and palette rotation in their entirety
-            palette_rotation_offset = palette_initial_rotation.copy()
-            robot_initial_rotation_copy = robot_initial_rotation.copy()
-            
-            print(f"New position offset: {palette_offset}")
-            print(f"New rotation offset: {palette_rotation_offset}")
-
-        # Lower palette and disable following when 'E' is pressed
+        # Lower palette and stop following when 'E' is pressed
         elif key == ord('E'):
-            print("Lowering palette and disabling following...")
-            palette_translation = translation_fields['palette'].getSFVec3f()
-            # Move down by 0.05 units
-            palette_translation[2] -= 0.05
-            translation_fields['palette'].setSFVec3f(palette_translation)
-            palette_raised = False
-            print(f"Palette lowered: {palette_translation}")
+            try:
+                if palette_raised:
+                    print("Lowering palette and disabling following...")
+                    
+                    # Lower the palette a bit
+                    current_pos = palette_translation_field.getSFVec3f()
+                    new_pos = [current_pos[0], current_pos[1], current_pos[2] - 0.05]
+                    palette_translation_field.setSFVec3f(new_pos)
+                    current_pos2 = carton_translation_field.getSFVec3f()
+                    new_pos = [current_pos2[0], current_pos2[1], current_pos2[2] - 0.05]
+                    carton_translation_field.setSFVec3f(new_pos)
+                    
+                    palette_raised = False
+                    print("Palette lowered and following disabled")
+            except Exception as e:
+                print(f"Error lowering palette: {e}")
         else:
             is_key_valid = False
-        
-        # Update palette position and rotation to follow robot if raised
+                
+        # Update palette position if following is enabled
         if palette_raised:
-            # Update position
-            current_robot_position = robot_translation_field.getSFVec3f()
-            new_palette_position = [
-                current_robot_position[0] + palette_offset[0],
-                current_robot_position[1] + palette_offset[1],
-                translation_fields['palette'].getSFVec3f()[2]  # Keep current Z height
-            ]
-            translation_fields['palette'].setSFVec3f(new_palette_position)
-            
-            # Update rotation - keep the full rotation values
-            current_robot_rotation = robot_rotation_field.getSFRotation()
-            # Simply apply the robot's rotation directly to the palette
-            rotation_fields['palette'].setSFRotation(current_robot_rotation)
+            try:
+                # Get current robot position and rotation
+                robot_pos = robot_translation_field.getSFVec3f()
+                robot_rot = robot_rotation_field.getSFRotation()
+                
+                # Extract rotation angle (assuming Y-axis rotation which is common for ground vehicles)
+                # angle = robot_rot[3]
+                axis = [robot_rot[0], robot_rot[1], robot_rot[2]]
+                
+                # Calculate new position based on robot position and offset
+                # For simplicity, we'll just consider Y-axis rotation (most common for ground vehicles)
+                # For full 3D rotation, you would need to use rotation matrices or quaternions
+                
+                # If rotation is primarily around Y-axis
+                # if abs(axis[1]) > 0.9:  # Y-axis rotation
+                #     # Apply rotation to the X-Z offset
+                #     rotated_x = palette_offset[0] * math.cos(angle) - palette_offset[2] * math.sin(angle)
+                #     rotated_z = palette_offset[0] * math.sin(angle) + palette_offset[2] * math.cos(angle)
+                    
+                #     new_pos = [
+                #         robot_pos[0] + rotated_x,
+                #         robot_pos[1] + palette_offset[1],  # Y offset remains the same
+                #         robot_pos[2] + rotated_z
+                #     ]
+                # else:
+                    # Fallback for other rotation axes - simplified
+                new_pos = [
+                    robot_pos[0] + palette_offset[0],
+                    robot_pos[1] + palette_offset[1],
+                    robot_pos[2] + palette_offset[2]
+                ]
+                new_pos2 = [
+                    robot_pos[0] + carton_offset[0],
+                    robot_pos[1] + carton_offset[1],
+                    robot_pos[2] + carton_offset[2]
+                ]
+                
+                # Update palette position
+                palette_translation_field.setSFVec3f(new_pos)
+                carton_translation_field.setSFVec3f(new_pos2)
+                # Set palette rotation to match robot rotation
+                # palette_rotation_field.setSFRotation(robot_rot)
+                
+            except Exception as e:
+                print(f"Error updating palette position: {e}")
                 
         if is_key_valid and key != ord('A') and key != ord('E'):
             print(f"vx:{target_speed:.2f}[m/s] ω:{target_omega:.2f}[rad/s]")
