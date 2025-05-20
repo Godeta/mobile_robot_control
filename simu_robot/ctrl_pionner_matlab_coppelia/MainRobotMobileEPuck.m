@@ -1,5 +1,5 @@
 close all;clear all;clc;
-coppelia =1;
+coppelia =0;
 
 global  d r1 dt
 % paramètres robot
@@ -7,7 +7,7 @@ global  d r1 dt
 d = 0.053; r1=d/2; L=0.021;
 
 % --    Trajectoire    --
-dt=0.1;
+dt=0.15;
 %position initiale
 x=0;y=0;theta=0;
 X=[x;y;theta];
@@ -39,8 +39,8 @@ yr=[-1,-1,1,1];
 %yr = 0.5 * sin(xr * pi); % courbe en S
 
 %trajectoire papillon
-%xr = 2*sin(((2*pi)/30)*t);
-%yr = 2*sin(((4*pi)/30)*t);
+xr = 2*sin(((2*pi)/30)*t);
+yr = 2*sin(((4*pi)/30)*t);
 
 %point
 %xr = -1;
@@ -61,8 +61,8 @@ yr=[-1,-1,1,1];
 % yr=vq1;
 
 %angle à atteindre
-xr = 1
-yr = 1
+%xr = 1
+%yr = 1
 theta_goal = 1; % Par exemple, orienté vers le haut (90°)
 
 Vref=0;        % max 0.5 m/s
