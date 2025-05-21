@@ -4,95 +4,63 @@ import time
 import threading
 from ev3dev2.motor import LargeMotor, OUTPUT_A, OUTPUT_B, SpeedDPS
 from ev3dev2.sensor import Sensor, INPUT_1, INPUT_3
-from ev3dev2.sensor.lego import GyroSensor
 from ev3dev2.port import LegoPort
 from ev3dev2.display import Display
+from ev3dev2.sensor.lego import GyroSensor
+from ev3dev2.motor import SpeedDPS
 
-# Setup Pixy
+# Setup Pixy camera
 LegoPort(INPUT_1).mode = 'auto'
 time.sleep(2)
 pixy = Sensor(INPUT_1)
 pixy.mode = 'ALL'
 
+# Display
+lcd = Display()
+
+# Gyro setup (assuming it's on INPUT_3)
+gyro = GyroSensor(INPUT_3)
+gyro.reset()
+time.sleep(0.5)  # Give time to reset
+
 # Motors
 left_motor = LargeMotor(OUTPUT_A)
 right_motor = LargeMotor(OUTPUT_B)
-
-# Display & Gyro
-lcd = Display()
-gyro = GyroSensor(INPUT_3)
-gyro.reset()
-
-# Threading flag
+# Flag to signal move_time completion
 move_done = threading.Event()
-global move_thread_running
-move_thread_running = False
 
-# Instructions: direction time(ms) angle(degrees)
-instructions = [
-    "forward 11000 0", 
-    "right 1000 90", 
-    "forward 6000 90",
-    "right 1000 180", 
-    "forward 0 180", #dynamically updated
-    "left 1000 90",
-    "forward 3000 90", 
-    "backward 3000 90"
-]
+# Variable to track the detected signature
+current_signature = 0
+saved_signature = 0
+is_scanning = False  # Flag to control when camera is actively scanning
 
-# Parse instruction
-def parse_instruction(instruction):
-    parts = instruction.split()
-    if len(parts) != 3:
-        return None, None, None, None
-
-    direction = parts[0]
-    duration = int(parts[1]) / 1000.0  # ms to seconds
-    angle = int(parts[2])
-    speed = 300
-
-    if direction == "forward":
-        return -speed, -speed, duration, angle
-    elif direction == "backward":
-        return speed, speed, duration, angle
-    elif direction == "left":
-        return speed, -speed, duration, angle
-    elif direction == "right":
-        return -speed, speed, duration, angle
-    else:
-        return 0, 0, 0, angle
-
-# Draw object rectangle from Pixy
-def draw_pixy_rect():
+def get_signature():
+    """
+    Get the current signature detected by Pixy camera
+    Returns signature number (1-3) or 0 if none detected
+    """
     try:
-        x = pixy.value(1) * 0.7
-        y = pixy.value(2) * 0.6
-        w = pixy.value(3) * 0.7
-        h = pixy.value(4) * 0.6
-        dx, dy = int(w / 2), int(h / 2)
-        xa, ya = x - dx, y + dy
-        xb, yb = x + dx, y - dy
-        lcd.draw.rectangle((xa, ya, xb, yb), fill='black')
+        # In 'ALL' mode, the first value indicates signature number
+        signature = pixy.value(0)
+        
+        # Check if it's one of our target signatures (1, 2, or 3)
+        if signature in [1, 2, 3]:
+            return signature
+        return 0
     except Exception:
-        pass
+        return 0
 
-def move_time(target_angle, left_speed, right_speed, duration):
-    """Move the robot for a specified duration with gyro correction"""
-    global move_thread_running
-    
-    # If we're already moving, do nothing
-    if move_thread_running:
-        return
-        
+def move_time(target_angle, left_speed, right_speed, duration_ms):
+    """
+    Move the robot for a specified duration with gyro correction
+    duration_ms: duration in milliseconds
+    """
     def _move():
-        global move_thread_running
-        move_thread_running = True
-        move_done.clear()  # Make sure the event is cleared when we start
-        
         kp = 2.0  # Proportional gain; tune this value based on testing
 
         start_time = time.time()
-        while time.time() - start_time < duration:
+        duration_sec = duration_ms / 1000.0  # Convert milliseconds to seconds
+        while time.time() - start_time < duration_sec:
             current_angle = gyro.angle
             correction = kp * (current_angle - target_angle)
 
@@ -106,96 +74,117 @@ def move_time(target_angle, left_speed, right_speed, duration):
 
         left_motor.off()
         right_motor.off()
-        
-        # Signal that the move is complete
         move_done.set()
-        move_thread_running = False
-        
-    # Start movement thread
+
+    move_done.clear()
     threading.Thread(target=_move).start()
 
-# Main loop
 if __name__ == "__main__":
-    step = 0
-    total_steps = len(instructions)
-
-    left_motor.reset()
-    right_motor.reset()
-    gyro.reset()
+    step = 0  # Keep track of movement sequence
     
-    # Clear move_done initially
-    move_done.clear()
-    
-    # Start first movement
-    if instructions:
-        ls, rs, dur, angle = parse_instruction(instructions[0])
-        move_time(angle, ls, rs, dur)
-    
-    moving_time = 0
-    
-    while True:
-        lcd.clear()
-
-        # Display info
-        if step < total_steps:
-            direction, duration_ms, angle = instructions[step].split()
-            lcd.draw.text((0, 0), "Step: {}/{}".format(step + 1, total_steps))
-            lcd.draw.text((0, 20), "Cmd: {} {} ms".format(direction, duration_ms))
-            # lcd.draw.text((0, 40), "Gyro: {:.1f}°".format(gyro.angle))
-            lcd.draw.text((0, 60), "Target: {}°".format(angle))
-            lcd.draw.text((0, 80), "Move complete: {}".format("Yes" if move_done.is_set() else "No"))
-
-        draw_pixy_rect()
-        lcd.update()
-        
-        # Detect signature for step 4
-        if step == 4:
-            sig = pixy.value(0)
-            if sig == 1:
-                moving_time = 4000
-            elif sig == 2:
-                moving_time = 5000
-            elif sig == 3:
-                moving_time = 6000
-            else:
-                moving_time = 3000  # default fallback
-            # Update instruction 4 dynamically
-            instructions[step] = "forward {} 90".format(moving_time)
-        
-        # When move is complete AND we're not currently running a movement,
-        # advance to the next step and start the next movement
-        if move_done.is_set() and not move_thread_running:
-            print("Step {} done".format(step))
-            step += 1
-            
-            # Reset the event for the next movement
-            move_done.clear()
-            
-            # If we've completed all steps, break out of the loop
-            if step >= total_steps:
-                break
-                
-            # Start the next movement
-            ls, rs, dur, angle = parse_instruction(instructions[step])
-            move_time(angle, ls, rs, dur)
-            
-            # Short delay to ensure the thread starts properly
-            time.sleep(0.1)
-        else:
-            # If we haven't started a movement yet (first step) or 
-            # if the movement is done but thread cleanup is still happening,
-            # wait a short time
-            time.sleep(0.05)
-            
-            # If we're on a step but no movement is running, start it
-            if not move_thread_running and step < total_steps:
-                ls, rs, dur, angle = parse_instruction(instructions[step])
-                move_time(angle, ls, rs, dur)
-
-    # Program complete
-    lcd.clear()
-    lcd.draw.text((0, 40), "Program Complete")
+    # Initial message
+    lcd.text_pixels("Searching for objects...", True, 0, 0)
     lcd.update()
-    time.sleep(3)
     
-        # diagonale à droite 5s 45°, rota replacer à 0° comme position de base,forward 5s ,gauche rota -90 + forward 3s, couleur detec, gauche rota -180 et movingTime selon la couleur, gauche aligné -270° à la zone de dépot 8s, dépose recul zone 3s même angle, gauche bord 5s -360°, gauche rota -90°, forward prise pièce 5s puis répétition couleur detect,
+    # Step 0: Move forward for 9.5 seconds
+    move_time(0, -300, -300, 9800)  # 9.5 seconds = 9500 ms
+
+    while True:
+        # Handle camera scanning only during specific steps
+        if is_scanning:
+            # Get current signature only if we haven't saved one yet
+            if saved_signature == 0:
+                current_signature = get_signature()
+            
+            # Update saved_signature if a valid signature is detected
+            if current_signature != 0:
+                saved_signature = current_signature
+                print("Signature detected: ", saved_signature)
+            else:
+                current_signature = saved_signature
+            
+        # Handle movement sequence
+        if move_done.is_set():
+            if step == 0:
+                # Step 1: Diagonal right (45 degrees for 2s)
+                lcd.text_pixels("STEP 1: Diagonal right", True, 0, 0)
+                lcd.update()
+                # Start camera scanning during diagonal movement
+                is_scanning = True
+                move_time(45, -300, -220, 2000)  # Adjust the speeds for 45 degree diagonal
+                step += 1
+            elif step == 1:
+                # Step 2: Turn right to 90 degrees
+                is_scanning = False
+                lcd.text_pixels("STEP 2: Turn right", True, 0, 0)
+                lcd.text_pixels(str(gyro.angle), False, 89, 34)
+                lcd.update()
+                move_time(90, -100, 150, 1000)  # Turn right for 1s (1000 ms)
+                step += 1
+            elif step == 2:
+                # Step 3: Check for signature and proceed
+                lcd.text_pixels("STEP 3: Checking signature", True, 0, 0)
+                lcd.text_pixels(str(saved_signature), False, 89, 34)
+                lcd.text_pixels(str(gyro.angle), False, 89, 64)
+                lcd.update()
+                
+                # Set movingTime based on detected signature
+                if saved_signature == 1:
+                    movingTime = 2500  # 4 seconds = 4000 ms
+                elif saved_signature == 2:
+                    movingTime = 4800  # 5 seconds = 5000 ms
+                elif saved_signature == 3:
+                    movingTime = 6200  # 6 seconds = 6000 ms
+                else:
+                    movingTime = 5000  # Default if no signature detected
+                
+                # Continue with original sequence: Forward 6s
+                move_time(90, -300, -300, 7000)
+                step += 1
+            elif step == 3:
+                # Turn right
+                lcd.text_pixels("STEP 4: Turn right", True, 0, 0)
+                lcd.text_pixels(str(gyro.angle), False, 89, 64)
+                lcd.text_pixels(str(saved_signature), False, 89, 34)
+                lcd.update()
+                move_time(180, -150, 150, 1000)
+                step += 1
+            elif step == 4:
+                # Forward depending on color
+                lcd.text_pixels("STEP 5: Forward by color", True, 0, 0)
+                lcd.text_pixels(str(gyro.angle), True, 89, 64)
+                lcd.text_pixels(str(saved_signature), False, 89, 34)
+                lcd.update()
+                move_time(180, -300, -300, movingTime)
+                step += 1
+            elif step == 5:
+                # Turn left
+                lcd.text_pixels("STEP 6: Turn left", True, 0, 0)
+                lcd.text_pixels(str(gyro.angle), True, 89, 64)
+                lcd.text_pixels(str(saved_signature), False, 89, 34)
+                lcd.update()
+                move_time(90, 150, -150, 1000)
+                step += 1
+            elif step == 6:
+                # Forward
+                lcd.text_pixels("STEP 7: Forward", True, 0, 0)
+                lcd.text_pixels(str(saved_signature), False, 89, 64)
+                lcd.text_pixels(str(gyro.angle), False, 89, 34)
+                lcd.update()
+                move_time(90, -300, -300, 1500)
+                step += 1
+            elif step == 7:
+                # Backward
+                lcd.text_pixels("STEP 8: Backward - END", True, 0, 0)
+                lcd.text_pixels(str(saved_signature), False, 89, 64)
+                lcd.update()
+                move_time(90, 150, 150, 2000)
+                step += 1
+                break  # End the program
+
+        time.sleep(0.05)
+
+    while True:
+        lcd.text_pixels(" signature", True, 0, 0)
+        lcd.text_pixels(str(saved_signature), False, 89, 64)
+        lcd.update()

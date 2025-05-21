@@ -1,22 +1,23 @@
-#!/usr/bin/env pybricks-micropython
+#!/usr/bin/env python3
 
 import time
 import math
-from pybricks.hubs import EV3Brick
-from pybricks.ev3devices import Motor, GyroSensor
-from pybricks.parameters import Port, Stop
-from pybricks.robotics import DriveBase
+import threading
+from ev3dev2.motor import LargeMotor, MediumMotor, OUTPUT_A, OUTPUT_B, OUTPUT_D, SpeedDPS
+from ev3dev2.sensor import Sensor, INPUT_3
+from ev3dev2.sensor.lego import GyroSensor
+from ev3dev2.display import Display
 
-# Initialize the EV3 Brick
-ev3 = EV3Brick()
+# Initialize the display for debugging
+lcd = Display()
 
 # Motors
-left_motor = Motor(Port.A)
-right_motor = Motor(Port.B)
-fork_motor = Motor(Port.D)
+left_motor = LargeMotor(OUTPUT_A)
+right_motor = LargeMotor(OUTPUT_B)
+fork_motor = MediumMotor(OUTPUT_D)  # Assuming fork motor is large, change to MediumMotor if needed
 
 # Sensors
-gyro_sensor = GyroSensor(Port.S3)
+gyro_sensor = GyroSensor(INPUT_3)
 
 # Set up initial odometry and drive base
 class OdometrieRobot:
@@ -28,11 +29,16 @@ class OdometrieRobot:
         self.theta = 0.0                   # orientation (radian)
         self.distance_droite_precedent = 0.0
         self.distance_gauche_precedent = 0.0
+        
+        # Reset encoders
+        left_motor.position = 0
+        right_motor.position = 0
 
     def mettre_a_jour(self):
         # distances in cm
-        distance_droite = (right_motor.angle()*-1 / 360) * self.rayon_roue * 2 * math.pi
-        distance_gauche = (left_motor.angle()*-1 / 360) * self.rayon_roue * 2 * math.pi
+        # In ev3dev2, motor.position gives encoder ticks, must convert to angle
+        distance_droite = (right_motor.position * -1 / 360) * self.rayon_roue * 2 * math.pi
+        distance_gauche = (left_motor.position * -1 / 360) * self.rayon_roue * 2 * math.pi
 
         delta_droite = distance_droite - self.distance_droite_precedent
         delta_gauche = distance_gauche - self.distance_gauche_precedent
@@ -42,7 +48,8 @@ class OdometrieRobot:
 
         delta_distance = (delta_droite + delta_gauche) / 2
 
-        self.theta = (gyro_sensor.angle() * (-math.pi / 180) + math.pi) % (2 * math.pi) - math.pi
+        # Convert gyro angle to radians with same orientation as in the original code
+        self.theta = (gyro_sensor.angle * (-math.pi / 180) + math.pi) % (2 * math.pi) - math.pi
 
         self.x += delta_distance * math.cos(self.theta)
         self.y += delta_distance * math.sin(self.theta)
@@ -92,18 +99,17 @@ def scaleSpeed(Vg_linear, Vd_linear, R):
 
     return Vg_deg, Vd_deg
 
-
 if __name__ == "__main__":
     # Coordonné X,Y en cm
-    Zone_deche_app = [15,112]
-    Zone_deche_entre = [38,128]
-    Zone_deche_sorti = [55,129]
-    Zone_trie = [122,100]
+    Zone_deche_app = [15, 112]
+    Zone_deche_entre = [38, 128]
+    Zone_deche_sorti = [55, 129]
+    Zone_trie = [122, 100]
     Traj = [Zone_deche_app, Zone_deche_entre, Zone_deche_sorti, Zone_trie]
 
     step = 0
 
-    coef=1.5
+    coef = 1.5
     # Gains
     Kp = 0.5 * coef
     KIp = 0.05 * coef
@@ -115,12 +121,19 @@ if __name__ == "__main__":
     integral_p = 0.0
     integral_alpha = 0.0
 
-    robot = OdometrieRobot(rayon_roue=24, entraxe=12.5)
+    robot = OdometrieRobot(rayon_roue=2, entraxe=12.5)
 
-    left_motor.reset_angle(0)
-    right_motor.reset_angle(0)
-    fork_motor.reset_angle(0)
-    gyro_sensor.reset_angle(-90)
+    # Reset motors and sensors
+    left_motor.position = 0
+    right_motor.position = 0
+    fork_motor.position = 0
+    gyro_sensor.reset()
+    # Wait a moment for gyro to stabilize
+    time.sleep(0.5)
+    # Set gyro to -90 degrees as in original code
+    gyro_sensor.mode = 'GYRO-ANG'
+    gyro_sensor.calibrate()
+    time.sleep(0.5)  # Wait for calibration
 
     regul_interval = current_milli_time()
 
@@ -136,25 +149,30 @@ if __name__ == "__main__":
 
             scaleVg, scaleVd = scaleSpeed(Vg, Vd, robot.rayon_roue)
 
-            # Convert linear cm/s to motor angular speed (deg/s)
-            left_motor.run(int(scaleVg)*-1)
-            right_motor.run(int(scaleVd)*-1)
+            # Use on() method instead of run() for ev3dev2 motors
+            left_motor.on(SpeedDPS(int(scaleVg) * -1))
+            right_motor.on(SpeedDPS(int(scaleVd) * -1))
 
             # Print for debugging
-            ev3.screen.clear()
-            ev3.screen.print("x: {:.1f}".format(x))
-            ev3.screen.print("y: {:.1f}".format(y))
-            ev3.screen.print("θ: {:.2f}".format(math.degrees(theta)))
+            lcd.clear()
+            lcd.text_pixels("x: {:.1f}".format(x), False, 0, 0)
+            lcd.text_pixels("y: {:.1f}".format(y), False, 0, 10)
+            lcd.text_pixels("θ: {:.2f}".format(math.degrees(theta)), False, 0, 20)
+            lcd.update()
 
             # Check if robot has reached the goal (within 2 cm)
             if math.sqrt((Xr - x) ** 2 + (Yr - y) ** 2) < 2:
                 step += 1
             
             if step >= 4:
-                left_motor.brake()
-                right_motor.brake()
-                fork_motor.run_angle(500, 60)  # Adjust speed and angle as needed
+                left_motor.off()
+                right_motor.off()
+                
+                # Use on_for_degrees for angle control instead of run_angle
+                fork_motor.on_for_degrees(speed=SpeedDPS(500), degrees=60)
+                
+                # Wait for the fork motor to complete its movement - not needed with on_for_degrees as it blocks
+                # until completion
                 break  # Exit the loop after lifting the fork
-
 
             regul_interval = current_milli_time() + int(dt * 1000)
