@@ -26,17 +26,37 @@ arc_x = center_x + direction * arc_radius * np.sin(theta)  # direction appliqué
 arc_y = center_y + arc_radius * (1 - np.cos(theta))   # 1-cos pour partir vers le haut
 
 # Point à l'extrémité de l'arc
-end_x = arc_x[-1]
-end_y = arc_y[-1]
+end_xa = arc_x[-1]
+end_ya = arc_y[-1]
 
+# Coordonnées du segment retour (vertical de 0 à segment_length)
+segment_x2 = [end_xa, end_xa - 0]
+descente = 50
+segment_y2 = [end_ya, end_ya-descente]
+segment_y3 = [end_ya, end_ya-descente -7]
+segment_y4 = [end_ya, end_ya-descente -14]
+
+segment_x22 = [end_xa, end_xa + 20]
+segment_xr = [end_xa, end_x]
+segment_yr = [end_ya-descente, segment_length]
 # Création du plot
 plt.figure(figsize=(8, 8))
 plt.plot(segment_x, segment_y, 'b-', linewidth=2, label='Segment')
 plt.plot(arc_x, arc_y, 'r-', linewidth=2, label='Arc de cercle')
-plt.scatter([end_x], [end_y], color='green', s=100, label='Extrémité')
+plt.scatter([end_xa], [end_ya], color='green', s=100, label='Extrémité')
+# descente
+plt.plot(segment_x2, segment_y4, 'b-', linewidth=2, label='Segment recup 3')
+plt.plot(segment_x2, segment_y3, 'r-', linewidth=2, label='Segment recup 2')
+plt.plot(segment_x2, segment_y2, 'y-', linewidth=2, label='Segment recup 1')
+# dépose
+plt.plot(segment_x22, [end_ya-descente,end_ya-descente], 'b-', linewidth=2, label='Segment depot 3')
+plt.plot(segment_x22, [end_ya-descente-7,end_ya-descente-7], 'r-', linewidth=2, label='Segment depot 2')
+plt.plot(segment_x22, [end_ya-descente-14,end_ya-descente-14], 'y-', linewidth=2, label='Segment depot 1')
+# retour début d'approche pour boucle
+plt.plot(segment_xr, segment_yr, 'g-', linewidth=2, label='Segment retour approche')
 
 # Ajout des coordonnées du point final
-plt.text(end_x + 2 * direction, end_y, f'({end_x:.1f}, {end_y:.1f})', fontsize=12)
+plt.text(end_xa + 2 * direction, end_ya, f'({end_xa:.1f}, {end_ya:.1f})', fontsize=12)
 
 # Configuration du graphique
 plt.title(f'Segment avec arc de cercle (direction: {"gauche" if direction == -1 else "droite"})')

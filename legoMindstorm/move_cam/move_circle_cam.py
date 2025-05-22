@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 
-from ev3dev2.motor import OUTPUT_A, OUTPUT_B, MoveDifferential, SpeedRPM
-from ev3dev2.sensor import Sensor, INPUT_1
+from ev3dev2.motor import OUTPUT_A, OUTPUT_B, MoveDifferential, LargeMotor, SpeedRPM, SpeedDPS
+from ev3dev2.sensor import Sensor, INPUT_1, INPUT_3
 from ev3dev2.display import Display
 from ev3dev2.wheel import EV3Tire
 from ev3dev2.port import LegoPort
+from ev3dev2.sensor.lego import GyroSensor
 import time
 
 # Setup Pixy camera
@@ -20,10 +21,21 @@ lcd.clear()
 lcd.text_pixels("Robot Navigation Program", False, 0, 0)
 lcd.update()
 
+# Gyro setup (assuming it's on INPUT_3)
+gyro = GyroSensor(INPUT_3)
+gyro.reset()
+time.sleep(0.5)  # Give time to reset
+
 # Variable to track the detected signature
 current_signature = 0
 saved_signature = 0
 is_scanning = False  # Flag to control when camera is actively scanning
+
+# Motors
+left_motor = LargeMotor(OUTPUT_A)
+right_motor = LargeMotor(OUTPUT_B)
+# Flag to signal move_time completion
+# move_done = threading.Event()
 
 def get_signature():
     """
@@ -40,6 +52,35 @@ def get_signature():
         return 0
     except Exception:
         return 0
+
+def move_time(target_angle, left_speed, right_speed, duration_ms):
+    """
+    Move the robot for a specified duration with gyro correction
+    duration_ms: duration in milliseconds
+    """
+    # def _move():
+    kp = 4.0  # Proportional gain; tune this value based on testing
+
+    start_time = time.time()
+    duration_sec = duration_ms / 1000.0  # Convert milliseconds to seconds
+    while time.time() - start_time < duration_sec:
+        current_angle = gyro.angle
+        correction = kp * (current_angle - target_angle)
+
+        # Apply correction (reduce speed on the side it's drifting toward)
+        corrected_left_speed = left_speed + correction
+        corrected_right_speed = right_speed - correction
+
+        left_motor.on(SpeedDPS(corrected_left_speed))
+        right_motor.on(SpeedDPS(corrected_right_speed))
+        time.sleep(0.05)  # Short delay to allow smooth updates
+
+    left_motor.off()
+    right_motor.off()
+    # move_done.set()
+
+    # move_done.clear()
+    # threading.Thread(target=_move).start()
 
 # Set up the robot parameters
 # - Uses standard lego wheels
@@ -62,7 +103,7 @@ try:
     perimeter = 750
     lcd.text_pixels("Moving to (0, 800)...", False, 0, 20)
     lcd.update()
-    robot.on_to_coordinates(SpeedRPM(-50), -140, segment_length_mm)
+    robot.on_to_coordinates(SpeedRPM(-50), -180, segment_length_mm)
     
     # Wait a moment after reaching the position
     time.sleep(1)
@@ -73,8 +114,8 @@ try:
     lcd.update()
 
     # stop avant et détection couleur
-    inc_dist = 200
-    add_inc_dist = inc_dist/5
+    inc_dist = 250
+    add_inc_dist = inc_dist/10
     cumul = 0
     insideDetect = False # vrai si on est passé à une valeur autre que 0 puis de retour à 0
     robot.on_arc_right(SpeedRPM(-40), arc_radius, perimeter-inc_dist)
@@ -88,20 +129,37 @@ try:
                 has_seen_object = True
         elif current_signature != saved_signature :
                 insideDetect = True
-        lcd.update()
+        
         lcd.text_pixels("Signature: ", True, 0, 0)
         lcd.text_pixels(str(saved_signature), False, 89, 34)
         lcd.text_pixels("Inside detect : ", False, 89, 48)
         lcd.text_pixels(str(insideDetect), False, 89, 60)
+        lcd.update()
         # go forward
         robot.on_arc_right(SpeedRPM(-40), arc_radius, add_inc_dist)
     
-    # if save_sign...
+    
+    # Rotate to angular position 90 degrees clockwise
+    # robot.turn_to_angle(SpeedRPM(-40), 90)
+    move_time(180, -150, 150, 1200)  # Turn right for 1s (1000 ms)
 
-    # Rotate 90 degrees clockwise
-    robot.turn_right(SpeedRPM(-40), 90)
+    # distance depending on save sign value
+    if saved_signature == 1:
+        dist = 300
+    elif saved_signature == 2:
+        dist = 300 + 270
+    elif saved_signature == 3:
+        dist = 570 + 270
+    else:
+        dist = 10
+    
     # straight forward
-    robot.on_for_distance(SpeedRPM(-40), 100)
+    robot.on_for_distance(SpeedRPM(-40), dist)
+
+    # robot.robot.turn_to_angle(SpeedRPM(-40), -90)
+    move_time(90, 150, -150, 1100)  # Turn left for 1s (1000 ms
+
+    robot.on_for_distance(SpeedRPM(-40), 850-cumul/5)
 
     # Wait a moment after completing the arc
     time.sleep(1)
