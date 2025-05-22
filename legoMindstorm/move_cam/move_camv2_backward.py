@@ -81,7 +81,7 @@ def move_time(target_angle, left_speed, right_speed, duration_ms):
 
 if __name__ == "__main__":
     step = 0  # Keep track of movement sequence
-    has_seen_line = Falses
+    has_seen_line = False
     
     # Initial message
     lcd.text_pixels("Searching for objects...", True, 0, 0)
@@ -136,9 +136,9 @@ if __name__ == "__main__":
                 if saved_signature == 1:
                     movingTime = 3000  # 4 seconds = 4000 ms
                 elif saved_signature == 2:
-                    movingTime = 5400  # 5 seconds = 5000 ms
+                    movingTime = 5500  # 5 seconds = 5000 ms
                 elif saved_signature == 3:
-                    movingTime = 6700  # 6 seconds = 6000 ms
+                    movingTime = 6900  # 6 seconds = 6000 ms
                 else:
                     movingTime = 5400  # Default if no signature detected
                 
@@ -192,9 +192,9 @@ if __name__ == "__main__":
                 move_time(-90, -300, -300, 1000)
                 step += 1
 
-            elif step == 7:
+            elif step == 8:
                 # Backward
-                lcd.text_pixels("STEP 8: Backward - END", True, 0, 0)
+                lcd.text_pixels("STEP 9: Backward - END", True, 0, 0)
                 lcd.text_pixels(str(saved_signature), False, 89, 64)
                 lcd.update()
                 move_time(-90, 150, 150, 5000)
